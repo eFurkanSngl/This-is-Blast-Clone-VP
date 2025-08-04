@@ -11,6 +11,7 @@ public class GridManager : MonoBehaviour
     private TilePool _pool;
     private int _gridX;
     private int _gridY;
+    private Tile[,] _tiles;
 
 
     [Inject]
@@ -33,24 +34,32 @@ public class GridManager : MonoBehaviour
         _gridY = layout.GetLength(0); 
         _gridX = layout.GetLength(1);
 
+        _tiles = new Tile[_gridY, _gridX];
+
         for(int i = 0; i < _gridY; i++)
         {
             for(int j = 0; j < _gridX; j++)
             {
                 int id = layout[i, j];
                 Vector3 pos = new Vector3(
-                   transform.position.x + j * _spacing,
-                   transform.position.y + (_gridY - 1 - i) * _spacing,
-                   0f
-               );
+                 transform.position.x + j * _spacing,
+                 transform.position.y + i * _spacing,
+                 0f
+                );
                 GameObject newTile = _pool.GetTile(id);
-                if(newTile == null)
+                if( newTile == null)
                 {
-                    Debug.Log("TilePool did not return Tile for ID");
-                    continue;
+                    Debug.Log("is not enough");
                 }
                 newTile.transform.position = pos;
-                newTile.transform.SetParent(transform);
+                newTile.transform.SetParent(transform,false);
+
+                Tile tile = newTile.GetComponent<Tile>();
+                if(tile != null)
+                {
+                    tile.Initialize((Tile.TileColor)id);
+                    _tiles[i,j] = tile;
+                }
             }
         }
     }
