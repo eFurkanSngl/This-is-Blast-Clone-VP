@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: -4826181588956988567}
   - component: {fileID: -5708597212922792891}
   - component: {fileID: -2797655718104320720}
+  - component: {fileID: 1990099544090782257}
   m_Layer: 0
   m_Name: Yellow
   m_TagString: Untagged
@@ -163,6 +164,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f2bcf7264aaba841931efc70f95ab57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1990099544090782257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4485626453258844307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 960e7e95d93dd46429b09c4723a723db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5023012232913880957
 GameObject:
   m_ObjectHideFlags: 0
@@ -174,7 +187,6 @@ GameObject:
   - component: {fileID: 8241123921658849755}
   - component: {fileID: 8336528074937581817}
   - component: {fileID: 446798262382068811}
-  - component: {fileID: 8801143642607929398}
   m_Layer: 0
   m_Name: OutLine
   m_TagString: Untagged
@@ -247,27 +259,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &8801143642607929398
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5023012232913880957}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7341726231139480209
 GameObject:
   m_ObjectHideFlags: 0

@@ -6,5 +6,6 @@ public class SceneInstaller : MonoInstaller
     public override void InstallBindings()
     {
         Container.Bind<TilePool>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<LauncherManager>().FromComponentInHierarchy().AsSingle();
     }
 }

@@ -14,7 +14,6 @@ public class GoalItemClickHandler : MonoBehaviour
         if (_goalBoxManager != null)
         {
             _goalBoxManager.OnGoalItemClicked(this.gameObject);
-            _goalBoxManager.CloseGoalItemClick(this.gameObject);
         }
     }
 }

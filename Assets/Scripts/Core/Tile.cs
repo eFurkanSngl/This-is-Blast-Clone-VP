@@ -5,7 +5,7 @@ using Zenject;
 
 public class Tile : MonoBehaviour
 {
-    public enum TileColor { Yellow = 0, Blue = 1, Red = 2};
+    public enum TileColor { Yellow = 0, Blue = 1, Red = 2, Pink = 3};
 
     [SerializeField] private MeshRenderer _mr;
     [SerializeField] private Transform _tileTransform;

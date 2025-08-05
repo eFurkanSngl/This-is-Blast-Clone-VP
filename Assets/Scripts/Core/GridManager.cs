@@ -50,6 +50,7 @@ public class GridManager : MonoBehaviour
                 if( newTile == null)
                 {
                     Debug.Log("is not enough");
+                    continue;
                 }
                 newTile.transform.position = pos;
                 newTile.transform.SetParent(transform,false);

@@ -20,6 +20,7 @@ public class GoalBoxManager : MonoBehaviour
     [SerializeField] private float _delay = 0.1f;
 
     [Inject] private TilePool _tilePool;
+    [Inject] private LauncherManager _launcherManager;
 
     private List<Transform> closedBoxList = new List<Transform>();
     private List<Transform> allboxes = new List<Transform>();
@@ -51,11 +52,12 @@ public class GoalBoxManager : MonoBehaviour
         int index = 0;
         foreach(GameObject prefab in _goalItem)
         {
-            for(int i = 0; i < 2; i++)
+            for(int i = 0; i < 3; i++)
             {
                 Transform targetBox = allboxes[index];
                 GameObject newBox = Instantiate(prefab, targetBox);
                 newBox.transform.localPosition = Vector3.zero;
+                newBox.transform.rotation = Quaternion.identity;
 
                 CloseBoxOutLineEffect(targetBox, newBox);
                 GetGoalItem(newBox);
@@ -68,11 +70,11 @@ public class GoalBoxManager : MonoBehaviour
     }
     private void CloseBoxClick(GameObject obj, Transform targetBox)
     {
-        if(obj.TryGetComponent<GoalItemClickHandler>(out var goalItemClickHandler))
+        if(obj.TryGetComponent<CloseBoxClickHandler>(out var clickHandler))
         {
-            if(_closeBox.Contains(targetBox))
+            if (_closeBox.Contains(targetBox))
             {
-                goalItemClickHandler.Set(this);
+                clickHandler.Set(this);
             }
         }
     }
@@ -99,13 +101,19 @@ public class GoalBoxManager : MonoBehaviour
         {
             int id = (int)goalItem.GetColor();
             int totalCount = _tilePool.TileCount[id];
-            goalItem.Initialize(totalCount / 2);
+            goalItem.Initialize(totalCount / 3);
         }
     }
 
     public void OnGoalItemClicked(GameObject clickedObj)
     {
-        Debug.Log(" Launcher Manager Checking");
+        if(_launcherManager.HasEmptyBox(out int emptyIndex))
+        {
+            clickedObj.transform.SetParent(_launcherManager.GetBoxTransform(emptyIndex));
+            ClickedAnim(clickedObj, emptyIndex);
+            RemoveOutline(clickedObj);
+            DOTween.Kill(clickedObj);
+        }
     }
     private void Shuffle(List<Transform> list)
     {
@@ -132,7 +140,7 @@ public class GoalBoxManager : MonoBehaviour
         }
     }
 
-    private void RemoveAlpa(GameObject obj)
+    private void RemoveAlpha(GameObject obj)
     {
         if(obj.TryGetComponent<AlphaEffect>(out var alphaEffect))
         {
@@ -179,6 +187,45 @@ public class GoalBoxManager : MonoBehaviour
         if (child.TryGetComponent<OutLineEffect>(out var alphaOutline))
         {
             alphaOutline.EnableOutLine();
+        }
+    }
+
+    private void ClickedAnim(GameObject obj,int index)
+    {
+        obj.transform.DOMove(_launcherManager.GetBoxTransform(index).position, 0.4f)
+            .SetEase(Ease.InOutSine)
+            .OnComplete(() =>
+            {
+                obj.transform.localScale = Vector3.one;
+                _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
+                CheckAndMoveCloseBox();
+            });
+    }
+    private void CheckAndMoveCloseBox()
+    {
+        for (int i = 0; i < _openBox.Length; i++)
+        {
+            Transform openBox = _openBox[i];
+            if (openBox.childCount == 0)
+            {
+                Transform closeBox = _closeBox[i];
+
+                if (closeBox.childCount > 0)
+                {
+                    GameObject goalItem = closeBox.GetChild(0).gameObject;
+                    goalItem.transform.SetParent(openBox);
+
+                    goalItem.transform.DOMove(openBox.position, 0.35f).SetEase(Ease.InOutQuad)
+                        .OnComplete(() =>
+                        {
+                            goalItem.transform.localScale = Vector3.one;
+                            AnimNewGoalItem(goalItem);
+                        });
+
+                    RemoveAlpha(goalItem);
+                    OpenBoxClick(goalItem, openBox);
+                }
+            }
         }
     }
 }
