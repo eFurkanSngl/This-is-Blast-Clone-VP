@@ -57,7 +57,7 @@ public class LauncherManager : MonoBehaviour
     public void PlaceGoalItem(GoalItem goalItem , int index)
     {
         goalItem.transform.SetParent(_launcherBox[index],false);
-        PlaceGoalBoxAnim(goalItem);
+        //PlaceGoalBoxAnim(goalItem);
 
         BoxCollider boxCollider = goalItem.GetComponent<BoxCollider>();
         boxCollider.enabled = false;

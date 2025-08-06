@@ -20,7 +20,7 @@ public class Tile : MonoBehaviour
     public void Initialize(TileColor color)
     {
         tileColor = color;
-        SpawnEffect();
+        //SpawnEffect();
     }
 
     private void SpawnEffect()

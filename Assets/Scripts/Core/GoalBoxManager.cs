@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -70,11 +70,11 @@ public class GoalBoxManager : MonoBehaviour
     }
     private void CloseBoxClick(GameObject obj, Transform targetBox)
     {
-        if(obj.TryGetComponent<CloseBoxClickHandler>(out var clickHandler))
+        if(obj.TryGetComponent<GoalItemClickHandler>(out var goalItemClick))
         {
             if (_closeBox.Contains(targetBox))
             {
-                clickHandler.Set(this);
+                goalItemClick.Set(this, true);
             }
         }
     }
@@ -84,15 +84,23 @@ public class GoalBoxManager : MonoBehaviour
         {
             if (_openBox.Contains(target))
             {
-                goalItemClick.Set(this);
+                goalItemClick.Set(this, false);
             }
         }
     }
 
     public void CloseGoalItemClick(GameObject clickedObj)
     {
-        clickedObj.transform.DOShakePosition(0.2f, 0.5f, 6);
-        Debug.Log("is clik obj");
+        DOTween.Kill(clickedObj.transform);
+
+        clickedObj.transform.DOShakePosition(
+            0.4f,   
+            0.1f,  
+            6,      
+            50f,   
+            false,  
+            true    
+        ).SetEase(Ease.OutQuad);
 
     }
     private void GetGoalItem(GameObject obj)
@@ -169,17 +177,22 @@ public class GoalBoxManager : MonoBehaviour
 
     private void AnimNewGoalItem(GameObject child , float delay = 0.1f)
     {
-        child.transform.localPosition = Vector3.zero;
-        child.transform.localScale = new Vector3(1f, 0.6f, 1f); // squash start
+        child.transform.localScale = new Vector3(1f, 0.85f, 1f); 
 
         Sequence seq = DOTween.Sequence();
         seq.AppendInterval(delay);
-        seq.Append(child.transform.DOScale(Vector3.one * 1f, _spawnDuration * 0.4f).SetEase(Ease.OutBack));
-        seq.Append(child.transform.DOScale(Vector3.one * 0.95f, _spawnDuration * 0.2f).SetEase(Ease.InOutSine));
-        seq.Append(child.transform.DOScale(Vector3.one, _spawnDuration * 0.2f).SetEase(Ease.OutSine));
+
+        seq.Append(child.transform.DOScale(Vector3.one * 1.2f, _spawnDuration * 0.5f)
+            .SetEase(Ease.OutBack));
+        seq.Append(child.transform.DOScale(Vector3.one * 0.97f, _spawnDuration * 0.3f)
+            .SetEase(Ease.InOutSine));
+        seq.Append(child.transform.DOScale(Vector3.one, _spawnDuration * 0.2f)
+            .SetEase(Ease.OutSine));
+
+        // Sonsuz minimal yoyo loop
         seq.AppendCallback(() =>
         {
-            child.transform.DOScale(Vector3.one * _animSize, _loopDuration)
+            child.transform.DOScale(Vector3.one * 1.1f, _loopDuration * 1.2f)
                 .SetEase(Ease.InOutSine)
                 .SetLoops(-1, LoopType.Yoyo);
         });
@@ -192,14 +205,35 @@ public class GoalBoxManager : MonoBehaviour
 
     private void ClickedAnim(GameObject obj,int index)
     {
-        obj.transform.DOMove(_launcherManager.GetBoxTransform(index).position, 0.4f)
-            .SetEase(Ease.InOutSine)
-            .OnComplete(() =>
-            {
-                obj.transform.localScale = Vector3.one;
-                _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
-                CheckAndMoveCloseBox();
-            });
+        Vector3 targetPos = _launcherManager.GetBoxTransform(index).position;
+
+        obj.transform.localScale = Vector3.one * 0.9f;
+        obj.transform.DORotate(Vector3.zero, 0.1f);
+
+        float jumpPower = 1.2f;  
+        float duration = 0.45f;  
+
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(obj.transform.DOScale(Vector3.one * 1.1f, 0.1f).SetEase(Ease.OutBack));
+
+        seq.Append(obj.transform.DOJump(targetPos, jumpPower, 1, duration)
+            .SetEase(Ease.InOutSine));
+
+        seq.Join(obj.transform.DORotate(new Vector3(0, 0, 15f), duration / 2f)
+            .SetLoops(2, LoopType.Yoyo) 
+            .SetEase(Ease.InOutSine));
+
+        seq.Append(obj.transform.DOScale(Vector3.one, 0.1f).SetEase(Ease.OutBack));
+
+        seq.OnComplete(() =>
+        {
+            obj.transform.localScale = Vector3.one;
+            obj.transform.localPosition = Vector3.zero;
+
+            _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
+            CheckAndMoveCloseBox();
+        });
     }
     private void CheckAndMoveCloseBox()
     {
@@ -224,8 +258,33 @@ public class GoalBoxManager : MonoBehaviour
 
                     RemoveAlpha(goalItem);
                     OpenBoxClick(goalItem, openBox);
+                    CascadeCloseBox(closeBox, i);
                 }
             }
+        }
+    }
+    private void CascadeCloseBox(Transform upperCloseBox, int columnIndex)
+    {
+        if (columnIndex < 0 || columnIndex >= _closeBox.Length - _openBox.Length)
+            return;
+
+        int lowerIndex = columnIndex + _openBox.Length;
+        Transform lowerCloseBox = _closeBox[lowerIndex];
+
+        if (lowerCloseBox.childCount > 0)
+        {
+            GameObject goalItem = lowerCloseBox.GetChild(0).gameObject;
+            goalItem.transform.SetParent(upperCloseBox);
+            goalItem.transform.position = lowerCloseBox.position;
+
+            goalItem.transform.DOMove(upperCloseBox.position, 0.35f)
+                .SetEase(Ease.InOutQuad)
+                .OnComplete(() =>
+                {
+                    goalItem.transform.localScale = Vector3.one;
+                    goalItem.transform.localPosition = Vector3.zero;
+
+                });
         }
     }
 }
