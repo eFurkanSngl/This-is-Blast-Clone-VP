@@ -14,6 +14,7 @@ public class GoalItem : MonoBehaviour
 
     [SerializeField] private TextMeshPro _countText;
     [SerializeField] private GoalItemData _goalItemData;
+    [SerializeField] private TrailRenderer TrailRenderer;
     private MeshRenderer _renderer;
     private int _currentCount;
     public int CurrentCount => _currentCount;

@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +10,7 @@ public class LauncherManager : MonoBehaviour
     [SerializeField] private Transform[] _launcherBox;
     [SerializeField] private float _placeGoalDuration = 0.08f;
     [SerializeField] private float _mergeAnimDuration = 0.1f;
+    [Inject] private SignalBus _signalBus;
     private GoalItem[] _goalItemsInLauncher;
     private bool[] _reservedSlot;
 
@@ -66,7 +67,6 @@ public class LauncherManager : MonoBehaviour
         _reservedSlot[index] = false;
 
         CheckMerge();
-
     }
 
 
@@ -145,6 +145,8 @@ public class LauncherManager : MonoBehaviour
             {
                 centerItem.transform.DOScale(Vector3.one, _mergeAnimDuration).SetEase(Ease.InOutSine);
                 ItemTextMerge(matchedList);
+                _signalBus.Fire<MergeSignal>();
+
             });
     }
     private void ItemTextMerge(List<int> matchedList)

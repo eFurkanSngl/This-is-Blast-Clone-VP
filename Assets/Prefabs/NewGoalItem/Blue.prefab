@@ -423,6 +423,7 @@ MonoBehaviour:
   _countText: {fileID: 7170440359735686980}
   _goalItemData:
     tileColor: 1
+  TrailRenderer: {fileID: 0}
 --- !u!114 &7942131294371949739
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -21,6 +21,7 @@ public class GoalBoxManager : MonoBehaviour
 
     [Inject] private TilePool _tilePool;
     [Inject] private LauncherManager _launcherManager;
+    [Inject] private SignalBus _signalBus;
 
     private List<Transform> closedBoxList = new List<Transform>();
     private List<Transform> allboxes = new List<Transform>();
@@ -119,6 +120,7 @@ public class GoalBoxManager : MonoBehaviour
         {
             clickedObj.transform.SetParent(_launcherManager.GetBoxTransform(emptyIndex));
             ClickedAnim(clickedObj, emptyIndex);
+            _signalBus.Fire<ClickSignalBus>();
             RemoveOutline(clickedObj);
             DOTween.Kill(clickedObj);
         }
@@ -229,7 +231,8 @@ public class GoalBoxManager : MonoBehaviour
         seq.OnComplete(() =>
         {
             obj.transform.localScale = Vector3.one;
-            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localPosition = new Vector3(0f, 0f, -0.55f);
+            //obj.transform.localPosition = new Vector3(0f,0f,-0.55f);
 
             _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
             CheckAndMoveCloseBox();
