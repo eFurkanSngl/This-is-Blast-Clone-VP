@@ -24,9 +24,4 @@ public class GoalItemClickHandler : MonoBehaviour
             _goalBoxManager.OnGoalItemClicked(this.gameObject);
         }
     }
-
-    public void SetCloseBox(bool isClose)
-    {
-        _isCloseBox = isClose;
-    }
 }

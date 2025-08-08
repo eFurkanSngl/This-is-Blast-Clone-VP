@@ -13,7 +13,7 @@ public class LauncherManager : MonoBehaviour
     [Inject] private SignalBus _signalBus;
     private GoalItem[] _goalItemsInLauncher;
     private bool[] _reservedSlot;
-
+    List<int> matchedList = new List<int>();
     private void Awake()
     {
         _goalItemsInLauncher = new GoalItem[_launcherBox.Length];
@@ -85,13 +85,16 @@ public class LauncherManager : MonoBehaviour
 
     private void CheckMerge()
     {
+        matchedList.Clear();
         for(int i = 0; i < _goalItemsInLauncher.Length; i++)
         {
             if( _goalItemsInLauncher[i] == null) continue;
 
             int matchId = _goalItemsInLauncher[i].GetID();
             int matchCount = 1;
-            List<int> matchedList = new List<int> { i };
+
+            matchedList.Clear();
+            matchedList.Add(i);
 
             for(int y = i + 1; y < _goalItemsInLauncher.Length; y++)
             {

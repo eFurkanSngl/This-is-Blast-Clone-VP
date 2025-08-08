@@ -22,6 +22,7 @@ public class GoalBoxManager : MonoBehaviour
     [Inject] private TilePool _tilePool;
     [Inject] private LauncherManager _launcherManager;
     [Inject] private SignalBus _signalBus;
+    [Inject] private IMoveAnim _moveAnim;
 
     private List<Transform> closedBoxList = new List<Transform>();
     private List<Transform> allboxes = new List<Transform>();
@@ -251,13 +252,28 @@ public class GoalBoxManager : MonoBehaviour
                 {
                     GameObject goalItem = closeBox.GetChild(0).gameObject;
                     goalItem.transform.SetParent(openBox);
-
-                    goalItem.transform.DOMove(openBox.position, 0.35f).SetEase(Ease.InOutQuad)
-                        .OnComplete(() =>
+                    _moveAnim.MoveAnim(
+                       _transform:goalItem.transform,
+                       _targetPos:openBox.position,
+                        _duration:0.30f,
+                        _jumpPower: 0.42f,
+                        _squash: 0.10f,
+                        onComplete: () =>
                         {
                             goalItem.transform.localScale = Vector3.one;
                             AnimNewGoalItem(goalItem);
-                        });
+                            _signalBus.Fire<SwipeSignalBus>();
+                            if(goalItem.TryGetComponent<GoalItem>(out var goalItems))
+                            {
+                                goalItems.DisableTrail(0.2f);
+                            }
+                        }
+                        );
+
+                    if(goalItem.TryGetComponent<GoalItem>(out var goalItems))
+                    {
+                        goalItems.EnableTrail();
+                    }
 
                     RemoveAlpha(goalItem);
                     OpenBoxClick(goalItem, openBox);
@@ -280,14 +296,19 @@ public class GoalBoxManager : MonoBehaviour
             goalItem.transform.SetParent(upperCloseBox);
             goalItem.transform.position = lowerCloseBox.position;
 
-            goalItem.transform.DOMove(upperCloseBox.position, 0.35f)
-                .SetEase(Ease.InOutQuad)
-                .OnComplete(() =>
-                {
-                    goalItem.transform.localScale = Vector3.one;
-                    goalItem.transform.localPosition = Vector3.zero;
 
-                });
+            _moveAnim.MoveAnim(goalItem.transform, upperCloseBox.position, 0.24f, 0.30f, 0.08f,()=>
+            {
+                goalItem.transform.localScale = Vector3.one;
+                goalItem.transform.localPosition = Vector3.zero;
+
+                if (goalItem.TryGetComponent<GoalItem>(out var goalItems))
+                    goalItems.DisableTrail(0.2f);
+
+            });
+
+            if (goalItem.TryGetComponent<GoalItem>(out var goalItems))
+                goalItems.EnableTrail();
         }
     }
 }

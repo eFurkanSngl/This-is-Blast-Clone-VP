@@ -8,8 +8,10 @@ public class SceneInstaller : MonoInstaller
         InstallSignalBus();
         Container.Bind<TilePool>().FromComponentInHierarchy().AsSingle();
         Container.Bind<LauncherManager>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<IMoveAnim>().To<MoveAnimation>().AsSingle();
         Container.DeclareSignal<MergeSignal>();
         Container.DeclareSignal<ClickSignalBus>();
+        Container.DeclareSignal<SwipeSignalBus>();
     }
 
 

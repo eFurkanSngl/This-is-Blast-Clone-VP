@@ -258,6 +258,77 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
   m_PrefabInstance: {fileID: 1799969203564608974}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &4763140493233477707
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5032622859166788945}
+    m_Modifications:
+    - target: {fileID: 1472697041597633316, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: c8dab2efa4832d94ca109964d17428a8, type: 2}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.468
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7157368736360133000, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+      propertyPath: m_Name
+      value: Trail
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+--- !u!96 &6226790683559578479 stripped
+TrailRenderer:
+  m_CorrespondingSourceObject: {fileID: 1472697041597633316, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+  m_PrefabInstance: {fileID: 4763140493233477707}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6649734591829469723 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2184959866159411792, guid: 6327e4bb68cee4a42aac6fe47c6f376e, type: 3}
+  m_PrefabInstance: {fileID: 4763140493233477707}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4782205630076734138
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -335,6 +406,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7314556977943387326}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6649734591829469723}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
       insertIndex: -1
@@ -423,6 +497,7 @@ MonoBehaviour:
   _countText: {fileID: 7170440359735686980}
   _goalItemData:
     tileColor: 2
+  trailRenderer: {fileID: 6226790683559578479}
 --- !u!114 &7942131294371949739
 MonoBehaviour:
   m_ObjectHideFlags: 0

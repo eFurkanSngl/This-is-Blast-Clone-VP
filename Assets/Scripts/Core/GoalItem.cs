@@ -14,7 +14,8 @@ public class GoalItem : MonoBehaviour
 
     [SerializeField] private TextMeshPro _countText;
     [SerializeField] private GoalItemData _goalItemData;
-    [SerializeField] private TrailRenderer TrailRenderer;
+    [SerializeField] private TrailRenderer trailRenderer;
+
     private MeshRenderer _renderer;
     private int _currentCount;
     public int CurrentCount => _currentCount;
@@ -24,8 +25,28 @@ public class GoalItem : MonoBehaviour
     private void Awake()
     {
         _renderer = GetComponent<MeshRenderer>();
+        if(trailRenderer != null)
+        {
+            trailRenderer.emitting = false;
+        }
+        
     }
-
+    public void EnableTrail()
+    {
+        if (trailRenderer != null)
+            trailRenderer.emitting = true;
+        Debug.Log("work");
+    }
+    public void DisableTrail(float delay)
+    {
+        if (trailRenderer != null)
+            StartCoroutine(DisableTrailDelayed(delay));
+    }
+    private IEnumerator DisableTrailDelayed(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        trailRenderer.emitting = false;
+    }
     public void Initialize(int count)
     {
         _currentCount = count;
