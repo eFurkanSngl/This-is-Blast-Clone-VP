@@ -9,18 +9,28 @@ public class Tile : MonoBehaviour
 
     [SerializeField] private MeshRenderer _mr;
     [SerializeField] private Transform _tileTransform;
-
     public TileColor tileColor { get; private set; }
+
+
+    //[Header("Referenas")]
+    //[SerializeField] private GameObject _baseLayer;
+    //[SerializeField] private GameObject _topLayer;
+    //private int _layerHealth = 1;
 
     private void Awake()
     {
         _mr = GetComponent<MeshRenderer>();
+        //_topLayer.transform.localPosition = new Vector3(0f, 0f, -0.8f);
+
     }
 
-    public void Initialize(TileColor color)
+    public void Initialize(TileColor color, int layerHealth =1)
     {
         tileColor = color;
-        //SpawnEffect();
+        //_layerHealth = Mathf.Max(1, layerHealth);
+
+        //if (_baseLayer != null) _baseLayer.SetActive(true);
+        //if (_topLayer != null) _topLayer.SetActive(true);
     }
 
     private void SpawnEffect()

@@ -1091,7 +1091,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: d1f6e930503483a4ba039a6ed3644c37, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.5
+      value: 0.55
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d1f6e930503483a4ba039a6ed3644c37, type: 3}
       propertyPath: m_LocalScale.z
@@ -1099,7 +1099,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d1f6e930503483a4ba039a6ed3644c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.045
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d1f6e930503483a4ba039a6ed3644c37, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1176,6 +1176,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: d1f6e930503483a4ba039a6ed3644c37, type: 3}
       propertyPath: m_Name
       value: Tunnel
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: d1f6e930503483a4ba039a6ed3644c37, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2756,7 +2760,7 @@ MonoBehaviour:
   - {fileID: 5664586595422304235, guid: 078e903f6de865a45a29885de3be7b52, type: 3}
   _animSize: 1.1
   _loopDuration: 0.9
-  _spawnDuration: 0.1
+  _spawnDuration: 0.12
   _delay: 0.05
 --- !u!1 &1951209088
 GameObject:

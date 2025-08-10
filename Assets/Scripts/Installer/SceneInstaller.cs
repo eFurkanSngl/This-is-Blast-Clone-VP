@@ -9,6 +9,10 @@ public class SceneInstaller : MonoInstaller
         Container.Bind<TilePool>().FromComponentInHierarchy().AsSingle();
         Container.Bind<LauncherManager>().FromComponentInHierarchy().AsSingle();
         Container.Bind<IMoveAnim>().To<MoveAnimation>().AsSingle();
+        Container.Bind<IClickAnim>().To<ClickAnimation>().AsSingle();
+        Container.Bind<GoalItem>().To<GoalItem>().AsSingle();
+        Container.Bind<ISwapAnim>().To<SwapAnimation>().AsSingle();
+        Container.Bind<GridManager>().FromComponentInHierarchy().AsSingle();
         Container.DeclareSignal<MergeSignal>();
         Container.DeclareSignal<ClickSignalBus>();
         Container.DeclareSignal<SwipeSignalBus>();

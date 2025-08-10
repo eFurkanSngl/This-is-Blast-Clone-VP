@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
+using static UnityEditor.Progress;
 
 public class LauncherManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class LauncherManager : MonoBehaviour
     [SerializeField] private float _placeGoalDuration = 0.08f;
     [SerializeField] private float _mergeAnimDuration = 0.1f;
     [Inject] private SignalBus _signalBus;
+    [Inject] private GridManager _gridManager;
     private GoalItem[] _goalItemsInLauncher;
     private bool[] _reservedSlot;
     List<int> matchedList = new List<int>();
@@ -67,6 +69,8 @@ public class LauncherManager : MonoBehaviour
         _reservedSlot[index] = false;
 
         CheckMerge();
+
+        _gridManager.GoalItemMatchRoutine(goalItem);
     }
 
 

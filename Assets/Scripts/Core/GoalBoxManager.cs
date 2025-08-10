@@ -23,9 +23,12 @@ public class GoalBoxManager : MonoBehaviour
     [Inject] private LauncherManager _launcherManager;
     [Inject] private SignalBus _signalBus;
     [Inject] private IMoveAnim _moveAnim;
+    [Inject] private IClickAnim _clickAnim;
+    [Inject] private ISwapAnim _swapAnim;
 
     private List<Transform> closedBoxList = new List<Transform>();
     private List<Transform> allboxes = new List<Transform>();
+
 
     private void Awake()
     {
@@ -60,34 +63,29 @@ public class GoalBoxManager : MonoBehaviour
                 GameObject newBox = Instantiate(prefab, targetBox);
                 newBox.transform.localPosition = Vector3.zero;
                 newBox.transform.rotation = Quaternion.identity;
+                GoalItemCache cache = newBox.GetComponent<GoalItemCache>();
 
-                CloseBoxOutLineEffect(targetBox, newBox);
-                GetGoalItem(newBox);
-                OpenBoxClick(newBox, targetBox);
-                CloseBoxClick(newBox, targetBox);
+                CloseBoxOutLineEffect(targetBox, cache);
+                GetGoalItem(cache);
+                OpenBoxClick(targetBox,cache);
+                CloseBoxClick(targetBox, cache);
                 index++;
             }
            
         }
     }
-    private void CloseBoxClick(GameObject obj, Transform targetBox)
+    private void CloseBoxClick(Transform targetBox, GoalItemCache cache)
     {
-        if(obj.TryGetComponent<GoalItemClickHandler>(out var goalItemClick))
+        if (_closeBox.Contains(targetBox))
         {
-            if (_closeBox.Contains(targetBox))
-            {
-                goalItemClick.Set(this, true);
-            }
+            cache.goalItemClickHandler.Set(this,true); 
         }
     }
-    private void OpenBoxClick(GameObject obj ,Transform target)
+    private void OpenBoxClick(Transform target, GoalItemCache cache)
     {
-        if(obj.TryGetComponent<GoalItemClickHandler>(out var goalItemClick))
+        if (_openBox.Contains(target))
         {
-            if (_openBox.Contains(target))
-            {
-                goalItemClick.Set(this, false);
-            }
+            cache.goalItemClickHandler.Set(this,false);
         }
     }
 
@@ -105,13 +103,13 @@ public class GoalBoxManager : MonoBehaviour
         ).SetEase(Ease.OutQuad);
 
     }
-    private void GetGoalItem(GameObject obj)
+    private void GetGoalItem(GoalItemCache cache)
     {
-        if(obj.TryGetComponent<GoalItem>(out var goalItem))
+        if(cache.goalItem != null)
         {
-            int id = (int)goalItem.GetColor();
+            int id = (int)cache.goalItem.GetColor();
             int totalCount = _tilePool.TileCount[id];
-            goalItem.Initialize(totalCount / 3);
+            cache.goalItem.Initialize((totalCount/3) * 2);
         }
     }
 
@@ -135,36 +133,25 @@ public class GoalBoxManager : MonoBehaviour
         }
     }
 
-    private void CloseBoxOutLineEffect(Transform target , GameObject obj)
+    private void CloseBoxOutLineEffect(Transform target , GoalItemCache cache)
     {
         if (closedBoxList.Contains(target))
         {
-            if(obj.TryGetComponent<OutLineEffect>(out var outLine))
-            {
-                outLine.DisableOutLine();
-            }
-
-            if(obj.TryGetComponent<AlphaEffect>(out var outAlpha))
-            {
-                outAlpha.SetAlpha(0.6f);
-            }
+            cache.outLineEffect.DisableOutLine();
+            cache.alphaEffect.SetAlpha(0.6f);
         }
     }
 
     private void RemoveAlpha(GameObject obj)
     {
-        if(obj.TryGetComponent<AlphaEffect>(out var alphaEffect))
-        {
-            alphaEffect.FadeAlpha(1f,0.2f);
-        }
+        var cache = obj.GetComponent<GoalItemCache>();
+        cache.alphaEffect.FadeAlpha(1f, 0.2f);
     }
 
     private void RemoveOutline(GameObject obj)
     {
-        if(obj.TryGetComponent<OutLineEffect>(out var outLine))
-        {
-            outLine.DisableOutLine();
-        }
+        var cache = obj.GetComponent<GoalItemCache>();
+        cache.outLineEffect.DisableOutLine();
     }
     private void AnimOpenBox()
     {
@@ -180,64 +167,29 @@ public class GoalBoxManager : MonoBehaviour
 
     private void AnimNewGoalItem(GameObject child , float delay = 0.1f)
     {
-        child.transform.localScale = new Vector3(1f, 0.85f, 1f); 
+        _swapAnim.Play(child.transform, delay, _spawnDuration, _loopDuration, null);
 
-        Sequence seq = DOTween.Sequence();
-        seq.AppendInterval(delay);
-
-        seq.Append(child.transform.DOScale(Vector3.one * 1.2f, _spawnDuration * 0.5f)
-            .SetEase(Ease.OutBack));
-        seq.Append(child.transform.DOScale(Vector3.one * 0.97f, _spawnDuration * 0.3f)
-            .SetEase(Ease.InOutSine));
-        seq.Append(child.transform.DOScale(Vector3.one, _spawnDuration * 0.2f)
-            .SetEase(Ease.OutSine));
-
-        // Sonsuz minimal yoyo loop
-        seq.AppendCallback(() =>
-        {
-            child.transform.DOScale(Vector3.one * 1.1f, _loopDuration * 1.2f)
-                .SetEase(Ease.InOutSine)
-                .SetLoops(-1, LoopType.Yoyo);
-        });
-
-        if (child.TryGetComponent<OutLineEffect>(out var alphaOutline))
-        {
-            alphaOutline.EnableOutLine();
-        }
-    }
+        var cache = child.GetComponent<GoalItemCache>();
+        cache.outLineEffect.EnableOutLine();
+    }   
 
     private void ClickedAnim(GameObject obj,int index)
     {
         Vector3 targetPos = _launcherManager.GetBoxTransform(index).position;
+        _clickAnim.Play(
+       obj.transform,
+       targetPos,
+       jump: 1.2f,
+       duration: 0.45f,
+       OnComplete: () =>
+       {
+           obj.transform.localScale = Vector3.one;
+           obj.transform.localPosition = new Vector3(0f, 0f, -0.55f);
 
-        obj.transform.localScale = Vector3.one * 0.9f;
-        obj.transform.DORotate(Vector3.zero, 0.1f);
-
-        float jumpPower = 1.2f;  
-        float duration = 0.45f;  
-
-        Sequence seq = DOTween.Sequence();
-
-        seq.Append(obj.transform.DOScale(Vector3.one * 1.1f, 0.1f).SetEase(Ease.OutBack));
-
-        seq.Append(obj.transform.DOJump(targetPos, jumpPower, 1, duration)
-            .SetEase(Ease.InOutSine));
-
-        seq.Join(obj.transform.DORotate(new Vector3(0, 0, 15f), duration / 2f)
-            .SetLoops(2, LoopType.Yoyo) 
-            .SetEase(Ease.InOutSine));
-
-        seq.Append(obj.transform.DOScale(Vector3.one, 0.1f).SetEase(Ease.OutBack));
-
-        seq.OnComplete(() =>
-        {
-            obj.transform.localScale = Vector3.one;
-            obj.transform.localPosition = new Vector3(0f, 0f, -0.55f);
-            //obj.transform.localPosition = new Vector3(0f,0f,-0.55f);
-
-            _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
-            CheckAndMoveCloseBox();
-        });
+           _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
+           CheckAndMoveCloseBox();
+       }
+   );
     }
     private void CheckAndMoveCloseBox()
     {
@@ -255,7 +207,7 @@ public class GoalBoxManager : MonoBehaviour
                     _moveAnim.MoveAnim(
                        _transform:goalItem.transform,
                        _targetPos:openBox.position,
-                        _duration:0.30f,
+                        _duration:0.20f,
                         _jumpPower: 0.42f,
                         _squash: 0.10f,
                         onComplete: () =>
@@ -263,6 +215,7 @@ public class GoalBoxManager : MonoBehaviour
                             goalItem.transform.localScale = Vector3.one;
                             AnimNewGoalItem(goalItem);
                             _signalBus.Fire<SwipeSignalBus>();
+
                             if(goalItem.TryGetComponent<GoalItem>(out var goalItems))
                             {
                                 goalItems.DisableTrail(0.2f);
@@ -275,8 +228,9 @@ public class GoalBoxManager : MonoBehaviour
                         goalItems.EnableTrail();
                     }
 
+                    var cache = goalItem.GetComponent<GoalItemCache>();
                     RemoveAlpha(goalItem);
-                    OpenBoxClick(goalItem, openBox);
+                    OpenBoxClick(openBox,cache);
                     CascadeCloseBox(closeBox, i);
                 }
             }
@@ -297,7 +251,7 @@ public class GoalBoxManager : MonoBehaviour
             goalItem.transform.position = lowerCloseBox.position;
 
 
-            _moveAnim.MoveAnim(goalItem.transform, upperCloseBox.position, 0.24f, 0.30f, 0.08f,()=>
+            _moveAnim.MoveAnim(goalItem.transform, upperCloseBox.position, 0.14f, 0.30f, 0.08f,()=>
             {
                 goalItem.transform.localScale = Vector3.one;
                 goalItem.transform.localPosition = Vector3.zero;
@@ -309,6 +263,8 @@ public class GoalBoxManager : MonoBehaviour
 
             if (goalItem.TryGetComponent<GoalItem>(out var goalItems))
                 goalItems.EnableTrail();
+
         }
     }
 }
+    

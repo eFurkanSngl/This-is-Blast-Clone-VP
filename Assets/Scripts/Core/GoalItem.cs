@@ -35,7 +35,6 @@ public class GoalItem : MonoBehaviour
     {
         if (trailRenderer != null)
             trailRenderer.emitting = true;
-        Debug.Log("work");
     }
     public void DisableTrail(float delay)
     {

@@ -8,6 +8,7 @@ public class GridData: ScriptableObject
     [SerializeField] private int _gridY;
     [SerializeField] private int[] _flatLayout;
 
+    [SerializeField] private int[] _flatStackCount;
     public int[,] GetGridLayOut()
     {
         int[,] grid = new int[_gridY, _gridX];  // yükselik ve genişlik
@@ -26,6 +27,32 @@ public class GridData: ScriptableObject
             }
         }
         return grid;
+    }
+
+    public int[,] GetStackCounts()
+    {
+        int[,] stack = new int[_gridY,_gridX];
+
+        if(_flatStackCount == null || _flatStackCount.Length != _gridX * _gridY)
+        {
+            for(int i = 0; i < _gridY; ++i)
+            {
+                for(int j =0; j < _gridX; ++j)
+                {
+                    stack[i, j] = 1;
+                }
+            }
+            return stack;
+        }
+
+        for(int i = 0; i < _gridY; i++)
+        {
+            for(int j =0; j < _gridX; j++)
+            {
+                stack[i, j] = Mathf.Clamp(_flatStackCount[i * _gridX + j], 1, 2);
+            }
+        }
+        return stack;
     }
 
     public void DebugTileCounts()
