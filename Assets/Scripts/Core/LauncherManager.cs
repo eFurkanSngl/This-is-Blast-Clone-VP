@@ -12,6 +12,7 @@ public class LauncherManager : MonoBehaviour
     [SerializeField] private float _placeGoalDuration = 0.08f;
     [SerializeField] private float _mergeAnimDuration = 0.1f;
     [Inject] private SignalBus _signalBus;
+    [Inject] private IMergeAnim _mergeAnim;
     [Inject] private GridManager _gridManager;
     private GoalItem[] _goalItemsInLauncher;
     private bool[] _reservedSlot;
@@ -62,9 +63,7 @@ public class LauncherManager : MonoBehaviour
         goalItem.transform.SetParent(_launcherBox[index],false);
         //PlaceGoalBoxAnim(goalItem);
 
-        BoxCollider boxCollider = goalItem.GetComponent<BoxCollider>();
-        boxCollider.enabled = false;
-
+        goalItem.GetCollider().enabled = false;
         _goalItemsInLauncher[index] = goalItem;
         _reservedSlot[index] = false;
 
@@ -120,41 +119,19 @@ public class LauncherManager : MonoBehaviour
 
     private void MergeAnim(List<int> matchedList)
     {
-        matchedList.Sort();
-        int centerIndex = matchedList[1];
-        GoalItem centerItem = _goalItemsInLauncher[centerIndex];
+        _mergeAnim.PlayMergeAnim(
+          matchedList,
+          _goalItemsInLauncher,
+          _launcherBox,
+          _mergeAnimDuration,
+         onCompelete: ()=>
+          {
+              ItemTextMerge(matchedList);
+              _signalBus.Fire<MergeSignal>();
 
-        for (int i = 0; i < matchedList.Count; i++)
-        {
-            int currentIndex = matchedList[i];
-            if (currentIndex == centerIndex) continue;
-
-            GoalItem itemMerge = _goalItemsInLauncher[currentIndex];
-            if (itemMerge == null) continue;
-
-            Transform targetTrans = _launcherBox[centerIndex];
-            Transform itemTrans = itemMerge.transform;
-
-            Sequence seq = DOTween.Sequence();
-            seq.Append(itemTrans.DOMove(targetTrans.position, _mergeAnimDuration).SetEase(Ease.InOutSine));
-            seq.Join(itemTrans.DOScale(1.4f, _mergeAnimDuration));
-            seq.Append(itemTrans.DOScale(0.3f, _mergeAnimDuration));
-            seq.AppendCallback(() =>
-            {
-                itemTrans.DOKill();
-                Destroy(itemMerge.gameObject);
-                _goalItemsInLauncher[currentIndex] = null;
-            });
-        }
-
-        centerItem.transform.DOScale(1.5f, _mergeAnimDuration).SetEase(Ease.OutBack)
-            .OnComplete(() =>
-            {
-                centerItem.transform.DOScale(Vector3.one, _mergeAnimDuration).SetEase(Ease.InOutSine);
-                ItemTextMerge(matchedList);
-                _signalBus.Fire<MergeSignal>();
-
-            });
+              // istersen burada eşleşme kontrolünü ya da ateşlemeyi tetikle
+              // StartCoroutine(_gridManager.GoalItemMatchRoutine(_goalItemsInLauncher[matchedList[1]]));
+          });
     }
     private void ItemTextMerge(List<int> matchedList)
     {

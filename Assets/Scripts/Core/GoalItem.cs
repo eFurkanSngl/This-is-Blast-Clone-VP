@@ -15,7 +15,7 @@ public class GoalItem : MonoBehaviour
     [SerializeField] private TextMeshPro _countText;
     [SerializeField] private GoalItemData _goalItemData;
     [SerializeField] private TrailRenderer trailRenderer;
-
+    private BoxCollider _boxCollider;
     private MeshRenderer _renderer;
     private int _currentCount;
     public int CurrentCount => _currentCount;
@@ -29,7 +29,11 @@ public class GoalItem : MonoBehaviour
         {
             trailRenderer.emitting = false;
         }
-        
+        _boxCollider = GetComponent<BoxCollider>();
+    }
+    public BoxCollider GetCollider()
+    {
+        return _boxCollider;
     }
     public void EnableTrail()
     {

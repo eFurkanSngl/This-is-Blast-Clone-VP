@@ -12,6 +12,7 @@ public class SceneInstaller : MonoInstaller
         Container.Bind<IClickAnim>().To<ClickAnimation>().AsSingle();
         Container.Bind<GoalItem>().To<GoalItem>().AsSingle();
         Container.Bind<ISwapAnim>().To<SwapAnimation>().AsSingle();
+        Container.Bind<IMergeAnim>().To<MergeAnim>().AsSingle();
         Container.Bind<GridManager>().FromComponentInHierarchy().AsSingle();
         Container.DeclareSignal<MergeSignal>();
         Container.DeclareSignal<ClickSignalBus>();

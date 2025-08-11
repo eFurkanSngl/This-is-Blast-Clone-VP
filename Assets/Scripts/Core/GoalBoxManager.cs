@@ -117,10 +117,11 @@ public class GoalBoxManager : MonoBehaviour
     {
         if(_launcherManager.HasEmptyBox(out int emptyIndex))
         {
+            GoalItemCache cache = clickedObj.GetComponent<GoalItemCache>();
             clickedObj.transform.SetParent(_launcherManager.GetBoxTransform(emptyIndex));
-            ClickedAnim(clickedObj, emptyIndex);
+            ClickedAnim(cache, emptyIndex);
             _signalBus.Fire<ClickSignalBus>();
-            RemoveOutline(clickedObj);
+            RemoveOutline(cache);
             DOTween.Kill(clickedObj);
         }
     }
@@ -142,15 +143,13 @@ public class GoalBoxManager : MonoBehaviour
         }
     }
 
-    private void RemoveAlpha(GameObject obj)
+    private void RemoveAlpha(GoalItemCache cache)
     {
-        var cache = obj.GetComponent<GoalItemCache>();
         cache.alphaEffect.FadeAlpha(1f, 0.2f);
     }
 
-    private void RemoveOutline(GameObject obj)
+    private void RemoveOutline(GoalItemCache cache)
     {
-        var cache = obj.GetComponent<GoalItemCache>();
         cache.outLineEffect.DisableOutLine();
     }
     private void AnimOpenBox()
@@ -173,20 +172,20 @@ public class GoalBoxManager : MonoBehaviour
         cache.outLineEffect.EnableOutLine();
     }   
 
-    private void ClickedAnim(GameObject obj,int index)
+    private void ClickedAnim(GoalItemCache cache,int index)
     {
         Vector3 targetPos = _launcherManager.GetBoxTransform(index).position;
         _clickAnim.Play(
-       obj.transform,
+       cache.transform,
        targetPos,
        jump: 1.2f,
        duration: 0.45f,
        OnComplete: () =>
        {
-           obj.transform.localScale = Vector3.one;
-           obj.transform.localPosition = new Vector3(0f, 0f, -0.55f);
+           cache.transform.localScale = Vector3.one;
+           cache.transform.localPosition = new Vector3(0f, 0f, -0.55f);
 
-           _launcherManager.PlaceGoalItem(obj.GetComponent<GoalItem>(), index);
+           _launcherManager.PlaceGoalItem(cache.goalItem, index);
            CheckAndMoveCloseBox();
        }
    );
@@ -203,6 +202,8 @@ public class GoalBoxManager : MonoBehaviour
                 if (closeBox.childCount > 0)
                 {
                     GameObject goalItem = closeBox.GetChild(0).gameObject;
+                    var cache = goalItem.GetComponent<GoalItemCache>();
+
                     goalItem.transform.SetParent(openBox);
                     _moveAnim.MoveAnim(
                        _transform:goalItem.transform,
@@ -216,20 +217,12 @@ public class GoalBoxManager : MonoBehaviour
                             AnimNewGoalItem(goalItem);
                             _signalBus.Fire<SwipeSignalBus>();
 
-                            if(goalItem.TryGetComponent<GoalItem>(out var goalItems))
-                            {
-                                goalItems.DisableTrail(0.2f);
-                            }
+                            cache.goalItem.DisableTrail(0.2f);
                         }
                         );
+                    cache.goalItem.EnableTrail();
 
-                    if(goalItem.TryGetComponent<GoalItem>(out var goalItems))
-                    {
-                        goalItems.EnableTrail();
-                    }
-
-                    var cache = goalItem.GetComponent<GoalItemCache>();
-                    RemoveAlpha(goalItem);
+                    RemoveAlpha(cache);
                     OpenBoxClick(openBox,cache);
                     CascadeCloseBox(closeBox, i);
                 }
@@ -247,6 +240,7 @@ public class GoalBoxManager : MonoBehaviour
         if (lowerCloseBox.childCount > 0)
         {
             GameObject goalItem = lowerCloseBox.GetChild(0).gameObject;
+            GoalItemCache cache = goalItem.GetComponent<GoalItemCache>();
             goalItem.transform.SetParent(upperCloseBox);
             goalItem.transform.position = lowerCloseBox.position;
 
@@ -255,15 +249,9 @@ public class GoalBoxManager : MonoBehaviour
             {
                 goalItem.transform.localScale = Vector3.one;
                 goalItem.transform.localPosition = Vector3.zero;
-
-                if (goalItem.TryGetComponent<GoalItem>(out var goalItems))
-                    goalItems.DisableTrail(0.2f);
-
+                cache.goalItem.DisableTrail(0.2f);
             });
-
-            if (goalItem.TryGetComponent<GoalItem>(out var goalItems))
-                goalItems.EnableTrail();
-
+            cache.goalItem.EnableTrail();
         }
     }
 }

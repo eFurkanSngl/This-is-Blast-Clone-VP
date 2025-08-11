@@ -1,6 +1,9 @@
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using Zenject;
 
@@ -22,7 +25,21 @@ public class GridManager : MonoBehaviour
         _pool = tilePool;
         _launcherManager = launcherManager;
     }
+    private void RotateGoalItem(GoalItem goalItem,Vector3 targetPos)
+    {
+        Vector3 direction = targetPos - goalItem.transform.position;
+        direction.y = 0; 
 
+        if (direction == Vector3.zero)
+            return;
+
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+        goalItem.transform.DOKill();
+
+        goalItem.transform
+            .DORotateQuaternion(lookRotation, 0.3f)
+            .SetEase(Ease.OutBack); 
+    }
     public void GoalItemMatchRoutine(GoalItem goalItem)
     {
         StartCoroutine(GoalItemMatch(goalItem));
@@ -43,6 +60,8 @@ public class GridManager : MonoBehaviour
                 if (tile.GetId() == targetId)
                 {
                     Debug.Log("eþleþme bulundu");
+                    RotateGoalItem(goalItem, tile.transform.position);
+
                     found = true;
                     break;
                 }
@@ -54,7 +73,6 @@ public class GridManager : MonoBehaviour
                 continue;
             }
 
-            // Burada ateþleme kodu çalýþýr
             yield break;
         }
     }
@@ -70,7 +88,7 @@ public class GridManager : MonoBehaviour
     {
         int[,] layout = _gridData.GetGridLayOut();
 
-        //int[,] stacks = _gridData.GetStackCounts();
+        int[,] stacks = _gridData.GetStackCounts();
 
         _gridY = layout.GetLength(0); 
         _gridX = layout.GetLength(1);
@@ -99,8 +117,8 @@ public class GridManager : MonoBehaviour
                     Tile tile = newTile.GetComponent<Tile>();
                     if (tile != null)
                     {
-                    //int layerHealth = Math.Clamp(stacks[i, j], 1, 2);
-                        tile.Initialize((Tile.TileColor)id);
+                    int layerHealth = Math.Clamp(stacks[i, j], 1, 2);
+                    tile.Initialize((Tile.TileColor)id,layerHealth);
                         _tiles[i, j] = tile;
                     }
                 }
