@@ -2,8 +2,6 @@ using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
-using Unity.Mathematics;
 using UnityEngine;
 using Zenject;
 
@@ -16,14 +14,50 @@ public class GridManager : MonoBehaviour
     private int _gridX;
     private int _gridY;
     private Tile[,] _tiles;
+    private BulletManager _bulletManager;
 
 
     [Inject]
-    public void StructInject(GridData gridData, TilePool tilePool, LauncherManager launcherManager)
+    public void StructInject(GridData gridData, TilePool tilePool, LauncherManager launcherManager, BulletManager bulletManager)
     {
         _gridData = gridData;
         _pool = tilePool;
         _launcherManager = launcherManager;
+        _bulletManager = bulletManager;
+    }
+    private List<Transform> GetTilesBetween(Vector3 startPos, Vector3 targetPos, int row = 0)
+    {
+        var list = new List<Transform>();
+        if (_tiles == null) return list;
+
+        // ayný satýrýn Y’ini bul (fallback: start Y)
+        float rowY = startPos.y;
+        for (int x = 0; x < _gridX; x++)
+        {
+            var t = _tiles[row, x];
+            if (t != null) { rowY = t.transform.position.y; break; }
+        }
+
+        // X aralýðý (hedefi hariç tutmak için epsilon pay)
+        float eps = 0.001f;
+        float minX = Mathf.Min(startPos.x, targetPos.x) + eps;
+        float maxX = Mathf.Max(startPos.x, targetPos.x) - eps;
+
+        for (int x = 0; x < _gridX; x++)
+        {
+            var tile = _tiles[row, x];
+            if (tile == null) continue;
+
+            Vector3 p = tile.transform.position;
+
+            // ayný satýrda ve iki noktanýn arasýnda mý?
+            if (Mathf.Abs(p.y - rowY) < 0.01f && p.x > minX && p.x < maxX)
+            {
+                list.Add(tile.transform);
+            }
+        }
+
+        return list;
     }
     private void RotateGoalItem(GoalItem goalItem,Vector3 targetPos)
     {
@@ -59,22 +93,42 @@ public class GridManager : MonoBehaviour
 
                 if (tile.GetId() == targetId)
                 {
-                    Debug.Log("eþleþme bulundu");
-                    RotateGoalItem(goalItem, tile.transform.position);
-
                     found = true;
-                    break;
+
+                    Vector3 startPos = goalItem.transform.position;
+                    Vector3 endPos = tile.transform.position;
+
+                    RotateGoalItem(goalItem, endPos);
+
+                    var between = GetTilesBetween(startPos, endPos, row: 0);
+
+                    bool done = false;
+                    int tileId = tile.GetId();
+
+                    _bulletManager.FireBullet(startPos, endPos, between, () =>
+                    {
+                        _tiles[0, x] = null;
+                        _pool.ReturnTile(tileId, tile.gameObject);
+                        done = true;
+                    });
+
+                    while (!done) yield return null;
+
+                    goalItem.DecreaseCount(1);
+
+
+                    break; 
                 }
             }
 
             if (!found)
             {
-                yield return new WaitForSeconds(0.1f); 
-                continue;
+                yield return null;
             }
-
-            yield break;
+         
         }
+
+        if (goalItem != null) Debug.Log("is destroy goal Item");
     }
 
 

@@ -17,10 +17,32 @@ public class LauncherManager : MonoBehaviour
     private GoalItem[] _goalItemsInLauncher;
     private bool[] _reservedSlot;
     List<int> matchedList = new List<int>();
+    private Dictionary<int,bool> _idFireLock = new Dictionary<int,bool>();
     private void Awake()
     {
         _goalItemsInLauncher = new GoalItem[_launcherBox.Length];
         _reservedSlot = new bool[_launcherBox.Length];
+    }
+    
+    private IEnumerator FireGoalItemRoutine(GoalItem goalItem)
+    {
+        int id = goalItem.GetID();
+
+        if (!_idFireLock.ContainsKey(id))
+        {
+            _idFireLock[id] = false;
+        }
+
+        while (_idFireLock[id]) yield return null;
+
+        _idFireLock[id] |= true;
+
+        yield return new WaitForSeconds(0.1f);
+
+        _gridManager.GoalItemMatchRoutine(goalItem);
+        Debug.Log("start routine");
+
+        _idFireLock[id] = false;
     }
 
     public bool HasEmptyBox(out int index)
@@ -69,9 +91,8 @@ public class LauncherManager : MonoBehaviour
 
         CheckMerge();
 
-        _gridManager.GoalItemMatchRoutine(goalItem);
+        StartCoroutine(FireGoalItemRoutine(goalItem));
     }
-
 
     private void PlaceGoalBoxAnim(GoalItem item)
     {

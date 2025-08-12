@@ -17,6 +17,8 @@ public class SceneInstaller : MonoInstaller
         Container.DeclareSignal<MergeSignal>();
         Container.DeclareSignal<ClickSignalBus>();
         Container.DeclareSignal<SwipeSignalBus>();
+        Container.Bind<BulletPool>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<BulletManager>().FromComponentInHierarchy().AsSingle();
     }
 
 
