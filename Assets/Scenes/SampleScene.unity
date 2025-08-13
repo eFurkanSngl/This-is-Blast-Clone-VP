@@ -2450,9 +2450,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff24b632c4ff60743b9e2478da683f19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bulletSpeed: 30
-  _sidePushAmount: 0.15
-  _sidePushTime: 0.1
+  bulletSpeed: 30
+  pushAmount: 0.12
+  pushDuration: 0.08
 --- !u!4 &1613107500
 Transform:
   m_ObjectHideFlags: 0

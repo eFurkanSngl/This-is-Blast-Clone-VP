@@ -2,15 +2,15 @@ using System.Collections;
 using UnityEngine;
 using DG.Tweening;
 using Zenject;
+using System;
 
-public class Tile : MonoBehaviour
+public class Tile : MonoBehaviour, ITileAnim
 {
     public enum TileColor { Yellow = 0, Blue = 1, Red = 2, Pink = 3};
 
     [SerializeField] private MeshRenderer _mr;
     [SerializeField] private Transform _tileTransform;
     public TileColor tileColor { get; private set; }
-
 
     [Header("Referenas")]
     [SerializeField] private GameObject _baseLayer;
@@ -22,6 +22,21 @@ public class Tile : MonoBehaviour
         _mr = GetComponent<MeshRenderer>();
         _topLayer.transform.localPosition = new Vector3(0f, 0f, -0.8f);
 
+    }
+
+    public void PlayDestroyAnim(Action onComplete = null)
+    {
+        Transform transform = this.transform;
+        transform.DOKill();
+
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(transform.DOScale(Vector3.zero,0.15f).SetEase(Ease.InBack));
+
+        seq.OnComplete(() =>
+        {
+            onComplete?.Invoke();
+        });
     }
 
     public void Initialize(TileColor color, int layerHealth =1)

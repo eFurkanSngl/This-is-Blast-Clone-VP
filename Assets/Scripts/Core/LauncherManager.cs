@@ -91,7 +91,8 @@ public class LauncherManager : MonoBehaviour
 
         CheckMerge();
 
-        StartCoroutine(FireGoalItemRoutine(goalItem));
+        _gridManager.GoalItemMatchRoutine(goalItem);
+        //StartCoroutine(FireGoalItemRoutine(goalItem));
     }
 
     private void PlaceGoalBoxAnim(GoalItem item)
