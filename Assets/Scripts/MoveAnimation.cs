@@ -16,15 +16,12 @@ public class MoveAnimation: IMoveAnim
 
         var seq = DOTween.Sequence();
 
-        // take-off: hafif squash
         seq.Append(tr.DOScale(new Vector3(1f + squash, 1f - squash, 1f), duration * 0.35f)
             .SetEase(Ease.OutSine));
 
-        // uçuş: yumuşak yay
         seq.Append(tr.DOJump(targetWorldPos, jumpPower, 1, duration)
             .SetEase(Ease.InOutSine));
 
-        // landing: scale reset (hafif bounce)
         seq.Append(tr.DOScale(Vector3.one, duration * 0.25f)
             .SetEase(Ease.OutBack));
 

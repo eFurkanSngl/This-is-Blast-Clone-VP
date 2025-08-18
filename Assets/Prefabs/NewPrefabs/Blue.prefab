@@ -139,6 +139,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mr: {fileID: 5428659655960492126}
   _tileTransform: {fileID: 5164825350341251615}
+  _baseLayer: {fileID: 0}
+  _topLayer: {fileID: 0}
+  totalDuration: 0.1
+  easeType: 1
 --- !u!1 &9212774024038817013 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8391222552659086748, guid: 4015f43d21db929429f903c2de1935f3, type: 3}

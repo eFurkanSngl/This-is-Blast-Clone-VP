@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 using DG.Tweening;
 using Zenject;
@@ -6,77 +6,126 @@ using System;
 
 public class Tile : MonoBehaviour, ITileAnim
 {
-    public enum TileColor { Yellow = 0, Blue = 1, Red = 2, Pink = 3};
+    public enum TileColor { Yellow = 0, Blue = 1, Red = 2, Pink = 3 };
 
     [SerializeField] private MeshRenderer _mr;
     [SerializeField] private Transform _tileTransform;
     public TileColor tileColor { get; private set; }
 
-    [Header("Referenas")]
+    [Header("Referans")]
     [SerializeField] private GameObject _baseLayer;
     [SerializeField] private GameObject _topLayer;
     private int _layerHealth = 1;
 
+    [SerializeField] private float totalDuration = 0.05f; // Ã‡ok hÄ±zlÄ±
+    [SerializeField] private Ease easeType = Ease.InBack;
+
+    private bool _isBeingDestroyed;
+    private bool _topLayerDestroyed = false;
+    private bool _baseLayerDestroyed = false;
+
+    // Layer kontrol methodlarÄ±
+    public bool HasTopLayerOnly() => _topLayer != null && _topLayer.activeSelf && !_topLayerDestroyed;
+    public bool HasBaseLayerOnly() => _baseLayer != null && _baseLayer.activeSelf && !_baseLayerDestroyed;
+    public bool IsCompletelyDestroyed() => _topLayerDestroyed && _baseLayerDestroyed;
+    public bool ShouldHitTopLayer() => HasTopLayerOnly();
+
     private void Awake()
     {
         _mr = GetComponent<MeshRenderer>();
-        _topLayer.transform.localPosition = new Vector3(0f, 0f, -0.8f);
-
+        if (_topLayer != null)
+            _topLayer.transform.localPosition = new Vector3(0f, 0f, -0.8f);
     }
 
-    public void PlayDestroyAnim(Action onComplete = null)
+    public void PlayDestroyAnim(Transform target, Action onComplete = null)
     {
-        Transform transform = this.transform;
-        transform.DOKill();
-
-        Sequence seq = DOTween.Sequence();
-
-        seq.Append(transform.DOScale(Vector3.zero,0.15f).SetEase(Ease.InBack));
-
-        seq.OnComplete(() =>
+        if (target == null)
         {
             onComplete?.Invoke();
-        });
+            return;
+        }
+
+        target.DOScale(1.1f, totalDuration * 0.2f)
+            .SetEase(Ease.OutBack)
+            .OnComplete(() =>
+            {
+                target.DOScale(0f, totalDuration * 0.6f)
+                    .SetEase(easeType)
+                    .OnComplete(() =>
+                    {
+                        target.gameObject.SetActive(false);
+                        onComplete?.Invoke();
+                    });
+            });
     }
 
-    public void Initialize(TileColor color, int layerHealth =1)
+    public void HitLayer(bool hitTop, Action onComplete = null)
+    {
+        if (_isBeingDestroyed)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        _isBeingDestroyed = true;
+
+        if (hitTop && HasTopLayerOnly())
+        {
+            _topLayerDestroyed = true; // Hemen iÅŸaretle
+            PlayDestroyAnim(_topLayer?.transform, () =>
+            {
+                _topLayer?.SetActive(false);
+                _isBeingDestroyed = false;
+                onComplete?.Invoke();
+            });
+        }
+        else if (!hitTop && HasBaseLayerOnly())
+        {
+            _baseLayerDestroyed = true; // Hemen iÅŸaretle
+            PlayDestroyAnim(_baseLayer?.transform, () =>
+            {
+                _baseLayer?.SetActive(false);
+                _isBeingDestroyed = false;
+                onComplete?.Invoke();
+            });
+        }
+        else
+        {
+            _isBeingDestroyed = false;
+            onComplete?.Invoke();
+        }
+    }
+
+    public void Initialize(TileColor color, int layerHealth = 1)
     {
         tileColor = color;
         _layerHealth = Mathf.Max(1, layerHealth);
 
-        if (_baseLayer != null) _baseLayer.SetActive(true);
-        if (_topLayer != null) _topLayer.SetActive(true);
+        // Reset flags
+        _topLayerDestroyed = false;
+        _baseLayerDestroyed = false;
+        _isBeingDestroyed = false;
+
+        if (_baseLayer != null)
+        {
+            _baseLayer.SetActive(true);
+            _baseLayer.transform.localScale = Vector3.one;
+        }
+
+        if (_topLayer != null)
+        {
+            _topLayer.SetActive(true);
+            _topLayer.transform.localScale = Vector3.one;
+        }
     }
 
-    private void SpawnEffect()
+    public void ResetTile()
     {
-        _tileTransform.localScale = Vector3.zero; // sadece görsel küçülür
-        _tileTransform.DOScale(Vector3.one, 0.25f)
-            .SetEase(Ease.OutBack)
-            .OnComplete(() =>
-            {
-                _tileTransform.DOScale(Vector3.one * 1.1f, 0.5f)
-                    .SetEase(Ease.InOutSine)
-                    .SetLoops(3, LoopType.Yoyo);
-            });
-
-        //if (_materialInstance != null)
-        //{
-        //    Color originColor = _materialInstance.color;
-        //    Color brightColor = originColor * 1.5f;
-        //    brightColor.a = originColor.a;
-
-        //    _materialInstance.DOColor(brightColor, 0.25f)
-        //        .OnComplete(() =>
-        //        {
-        //            _materialInstance.DOColor(originColor, 0.25f);
-        //        });
-        //}
+        tileColor = (TileColor)(-1);
+        _topLayerDestroyed = false;
+        _baseLayerDestroyed = false;
+        _isBeingDestroyed = false;
     }
-    public void ResetTile() => tileColor = (TileColor)(-1);
 
-    public int GetId()
-    {
-        return (int)tileColor;
-    }
+    public int GetId() => (int)tileColor;
 }

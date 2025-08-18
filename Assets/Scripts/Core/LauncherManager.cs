@@ -39,7 +39,7 @@ public class LauncherManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        _gridManager.GoalItemMatchRoutine(goalItem);
+        //_gridManager.GoalItemMatchRoutine(goalItem);
         Debug.Log("start routine");
 
         _idFireLock[id] = false;
@@ -92,7 +92,6 @@ public class LauncherManager : MonoBehaviour
         CheckMerge();
 
         _gridManager.GoalItemMatchRoutine(goalItem);
-        //StartCoroutine(FireGoalItemRoutine(goalItem));
     }
 
     private void PlaceGoalBoxAnim(GoalItem item)

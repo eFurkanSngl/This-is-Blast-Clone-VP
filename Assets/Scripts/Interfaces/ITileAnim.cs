@@ -3,5 +3,5 @@ using UnityEngine;
 
 public interface ITileAnim
 {
-    void PlayDestroyAnim(Action onComplete = null);
+    void PlayDestroyAnim(Transform target,Action onComplete = null);
 }

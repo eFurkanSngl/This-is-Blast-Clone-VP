@@ -122,6 +122,7 @@ public class GoalBoxManager : MonoBehaviour
             ClickedAnim(cache, emptyIndex);
             _signalBus.Fire<ClickSignalBus>();
             RemoveOutline(cache);
+            cache.goalItem.EnableTrail();
             DOTween.Kill(clickedObj);
         }
     }

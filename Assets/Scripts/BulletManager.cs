@@ -9,14 +9,12 @@ public class BulletManager : MonoBehaviour
     [Inject] private BulletPool _bulletPool;
 
 
-    [SerializeField] private float bulletSpeed = 22f; // mermi hızı (speed-based)
-    [SerializeField] private float bounceScale = 1.15f; // fırlama sırasında büyüme oranı
-    [SerializeField] private float bounceDuration = 0.15f; // bounce süresi
-    [SerializeField] private float wiggleAngle = 8f; // hafif sağ-sol açı
-    [SerializeField] private float wiggleDuration = 0.1f; // wiggle süresi
-    /// <summary>
-    /// Mermiyi başlatır, yol üstündeki tile’ları ittirir.
-    /// </summary>
+    [SerializeField] private float bulletSpeed = 22f; 
+    [SerializeField] private float bounceScale = 1.15f;
+    [SerializeField] private float bounceDuration = 0.15f;
+    [SerializeField] private float wiggleAngle = 8f; 
+    [SerializeField] private float wiggleDuration = 0.1f; 
+ 
     public void FireBullet(Vector3 startPos, Vector3 targetPos, Action onHit = null)
     {
         GameObject bullet = _bulletPool.GetBullet();

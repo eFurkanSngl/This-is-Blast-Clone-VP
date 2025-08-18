@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,6 +25,44 @@ public class GridManager : MonoBehaviour
         _pool = tilePool;
         _launcherManager = launcherManager;
         _bulletManager = bulletManager;
+    }
+
+    private IEnumerator RainDownRoutine()
+    {
+        for(int x = _gridY - 2; x >= 0; x--)
+        {
+            for(int y = 0; y < _gridX; y++)
+            {
+                if (_tiles[x, y] == null) continue;
+
+                int targetX = x;
+
+                while(targetX+ 1 < _gridY && _tiles[targetX + 1, y] == null)
+                {
+                    targetX++;
+                }
+
+                if(targetX != x)
+                {
+                    Tile fallingTile = _tiles[x, y];
+                    _tiles[targetX,y] = fallingTile;
+                    _tiles[x, y] = null;
+
+                    Vector3 targetPos = GetWorldPos(targetX, y);
+                    fallingTile.transform.DOMove(targetPos,0.3f).SetEase(Ease.InOutBack);
+                    yield return new WaitForSeconds(0.2f);
+                }
+            }
+        }
+    }
+
+    private Vector3 GetWorldPos(int row, int col)
+    {
+        return new Vector3(
+           transform.position.x + col * _spacing,
+           transform.position.y + (_gridY - 1 - row) * _spacing,  
+           0f
+       );
     }
     private List<Transform> GetTilesBetween(Vector3 startPos, Vector3 targetPos, int row = 0)
     {
@@ -62,10 +100,12 @@ public class GridManager : MonoBehaviour
             .DORotateQuaternion(lookRotation, 0.3f)
             .SetEase(Ease.OutBack); 
     }
+
     public void GoalItemMatchRoutine(GoalItem goalItem)
     {
         StartCoroutine(GoalItemMatch(goalItem));
     }
+
     private IEnumerator GoalItemMatch(GoalItem goalItem)
     {
         int targetId = goalItem.GetID();
@@ -77,12 +117,11 @@ public class GridManager : MonoBehaviour
             for (int x = 0; x < _gridX; x++)
             {
                 Tile tile = _tiles[0, x];
-                if (tile == null) continue;
+                if (tile == null || tile.IsCompletelyDestroyed()) continue;
 
                 if (tile.GetId() == targetId)
                 {
                     found = true;
-
                     Vector3 startPos = goalItem.transform.position;
                     Vector3 endPos = tile.transform.position;
 
@@ -90,34 +129,66 @@ public class GridManager : MonoBehaviour
 
                     int tileId = tile.GetId();
 
-                    _bulletManager.FireBullet(startPos, endPos,() =>
-                    {
+                    // Hangi layer'a vuracağımızı belirle
+                    bool shouldHitTop = tile.ShouldHitTopLayer();
 
-                       if(tile is ITileAnim anim)
+                    _bulletManager.FireBullet(startPos, endPos, () =>
+                    {
+                        if (shouldHitTop)
                         {
-                            anim.PlayDestroyAnim(() =>
+                            // Top layer'a vur
+                            tile.HitLayer(true, () =>
                             {
-                                _pool.ReturnTile(tileId, tile.gameObject);
                                 goalItem.DecreaseCount(1);
+
+                                // Top layer yok oldu, tile hala duruyor mu kontrol et
+                                if (tile.IsCompletelyDestroyed())
+                                {
+                                    _tiles[0, x] = null;
+                                    _pool.ReturnTile(tileId, tile.gameObject);
+                                    StartCoroutine(RainDownRoutine());
+                                }
                             });
                         }
+                        else
+                        {
+                            // Base layer'a vur
+                            tile.HitLayer(false, () =>
+                            {
 
+                                // Base layer yok oldu, tile tamamen bitti
+                                if (tile.IsCompletelyDestroyed())
+                                {
+                                    _pool.ReturnTile(tileId, tile.gameObject);
+                                    _tiles[0, x] = null;
+
+                                    StartCoroutine(RainDownRoutine());
+                                }
+                                goalItem.DecreaseCount(1);
+
+                            });
+                        }
                     });
-                     _tiles[0, x] = null;
-                    yield return new WaitForSeconds(0.09f);
-                    break;
-                }
-            }
 
+                    yield return new WaitForSeconds(0.2f);
+                }
+                break;  
+            }
             if (!found)
             {
+                Debug.Log($"GoalItem {targetId} için eşleşen tile bulunamadı!");
                 yield break;
             }
-         
+
+            // Her vuruş arasında kısa bir bekleme
+            //yield return new WaitForSeconds(0.1f); // Çok daha hızlı geçiş
         }
 
-        if (goalItem != null) Debug.Log("is destroy goal Item");
+        if (goalItem != null)
+            Debug.Log("GoalItem tamamen bitti");
     }
+
+
 
 
     private void Start()
@@ -176,5 +247,6 @@ public class GridManager : MonoBehaviour
 
         return _tiles[row, col];
     }
+
 
 }
