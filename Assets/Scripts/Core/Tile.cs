@@ -24,6 +24,8 @@ public class Tile : MonoBehaviour, ITileAnim
     private bool _topLayerDestroyed = false;
     private bool _baseLayerDestroyed = false;
 
+    public Vector2Int GridPos { get; private set; }
+
     // Layer kontrol methodları
     public bool HasTopLayerOnly() => _topLayer != null && _topLayer.activeSelf && !_topLayerDestroyed;
     public bool HasBaseLayerOnly() => _baseLayer != null && _baseLayer.activeSelf && !_baseLayerDestroyed;
@@ -35,6 +37,10 @@ public class Tile : MonoBehaviour, ITileAnim
         _mr = GetComponent<MeshRenderer>();
         if (_topLayer != null)
             _topLayer.transform.localPosition = new Vector3(0f, 0f, -0.8f);
+    }
+    public void SetGridPos(int row, int col)
+    {
+        GridPos = new Vector2Int(col, row);
     }
 
     public void PlayDestroyAnim(Transform target, Action onComplete = null)
@@ -72,9 +78,9 @@ public class Tile : MonoBehaviour, ITileAnim
         if (hitTop && HasTopLayerOnly())
         {
             _topLayerDestroyed = true; // Hemen işaretle
-            PlayDestroyAnim(_topLayer?.transform, () =>
+            PlayDestroyAnim(_topLayer.transform, () =>
             {
-                _topLayer?.SetActive(false);
+                _topLayer.SetActive(false);
                 _isBeingDestroyed = false;
                 onComplete?.Invoke();
             });
@@ -82,9 +88,9 @@ public class Tile : MonoBehaviour, ITileAnim
         else if (!hitTop && HasBaseLayerOnly())
         {
             _baseLayerDestroyed = true; // Hemen işaretle
-            PlayDestroyAnim(_baseLayer?.transform, () =>
+            PlayDestroyAnim(_baseLayer.transform, () =>
             {
-                _baseLayer?.SetActive(false);
+                _baseLayer.SetActive(false);
                 _isBeingDestroyed = false;
                 onComplete?.Invoke();
             });
@@ -116,6 +122,7 @@ public class Tile : MonoBehaviour, ITileAnim
         {
             _topLayer.SetActive(true);
             _topLayer.transform.localScale = Vector3.one;
+            _topLayer.transform.localPosition = new Vector3(0f,1f,0f);
         }
     }
 

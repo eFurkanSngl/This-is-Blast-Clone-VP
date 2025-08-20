@@ -22,7 +22,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
       propertyPath: m_LocalPosition.y
@@ -30,7 +30,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cea9e66a0650544580777f6fc81b2db, type: 3}
       propertyPath: m_LocalRotation.w
@@ -209,7 +209,7 @@ MonoBehaviour:
   _tileTransform: {fileID: 816570468669190220}
   _baseLayer: {fileID: 8684146136820470}
   _topLayer: {fileID: 453846696935787214}
-  totalDuration: 0.1
+  totalDuration: 0.05
   easeType: 1
 --- !u!4 &816570468669190220 stripped
 Transform:

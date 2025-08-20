@@ -19,6 +19,7 @@ public class SceneInstaller : MonoInstaller
         Container.DeclareSignal<SwipeSignalBus>();
         Container.Bind<BulletPool>().FromComponentInHierarchy().AsSingle();
         Container.Bind<BulletManager>().FromComponentInHierarchy().AsSingle();
+        Container.Bind<IGoalItemExitScreen>().To<GoalItemExitScreen>().AsSingle();
     }
 
 

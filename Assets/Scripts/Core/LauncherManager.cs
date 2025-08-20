@@ -18,31 +18,29 @@ public class LauncherManager : MonoBehaviour
     private bool[] _reservedSlot;
     List<int> matchedList = new List<int>();
     private Dictionary<int,bool> _idFireLock = new Dictionary<int,bool>();
+    private bool _isMerging = false;
     private void Awake()
     {
         _goalItemsInLauncher = new GoalItem[_launcherBox.Length];
         _reservedSlot = new bool[_launcherBox.Length];
     }
-    
-    private IEnumerator FireGoalItemRoutine(GoalItem goalItem)
+
+    public void ClearGoalItem(int index)
     {
-        int id = goalItem.GetID();
-
-        if (!_idFireLock.ContainsKey(id))
+        if(index >= 0 && index < _goalItemsInLauncher.Length)
         {
-            _idFireLock[id] = false;
+            _goalItemsInLauncher[index] = null;
+            _reservedSlot[index] = false;
         }
+    }
 
-        while (_idFireLock[id]) yield return null;
-
-        _idFireLock[id] |= true;
-
-        yield return new WaitForSeconds(0.1f);
-
-        //_gridManager.GoalItemMatchRoutine(goalItem);
-        Debug.Log("start routine");
-
-        _idFireLock[id] = false;
+    public int GetGoalItemIndex(GoalItem goalItem)
+    {
+        for(int i = 0; i < _goalItemsInLauncher.Length; i++)
+        {
+            if(_goalItemsInLauncher [i] == goalItem) return i;
+        }
+        return -1;
     }
 
     public bool HasEmptyBox(out int index)
@@ -69,31 +67,37 @@ public class LauncherManager : MonoBehaviour
         return true;
     }
 
-    public void RemoveGoalItem(int index)
-    {
-        if( index >= 0 && index < _goalItemsInLauncher.Length)
-        {
-            if(_goalItemsInLauncher[index] != null)
-            {
-                Destroy(_goalItemsInLauncher[index].gameObject);
-                _goalItemsInLauncher[index] = null;
-            }
-        }
-    }
     public void PlaceGoalItem(GoalItem goalItem , int index)
     {
         goalItem.transform.SetParent(_launcherBox[index],false);
-        //PlaceGoalBoxAnim(goalItem);
+        PlaceGoalBoxAnim(goalItem);
 
         goalItem.GetCollider().enabled = false;
         _goalItemsInLauncher[index] = goalItem;
         _reservedSlot[index] = false;
 
-        CheckMerge();
+       CheckMerge();
+        StartCoroutine(HasFireRoutine(goalItem, index));
 
+    }
+    private IEnumerator HasFireRoutine(GoalItem goalItem, int currentIndex)
+    {
+        // Merge varsa bekle
+        while (_isMerging)
+            yield return null;
+
+        int id = goalItem.GetID();
+
+        // Solda aynı id varsa ateş etme
+        for (int i = 0; i < currentIndex; i++)
+        {
+            if (_goalItemsInLauncher[i] != null && _goalItemsInLauncher[i].GetID() == id)
+                yield break;
+        }
+
+        // 🔥 Buraya kadar geldiyse ateş edebilir
         _gridManager.GoalItemMatchRoutine(goalItem);
     }
-
     private void PlaceGoalBoxAnim(GoalItem item)
     {
         Sequence seq = DOTween.Sequence();
@@ -135,11 +139,14 @@ public class LauncherManager : MonoBehaviour
                 MergeAnim(matchedList);
                 return;
             }
+
         }
+
     }
 
     private void MergeAnim(List<int> matchedList)
     {
+        _isMerging = true;
         _mergeAnim.PlayMergeAnim(
           matchedList,
           _goalItemsInLauncher,
@@ -147,11 +154,10 @@ public class LauncherManager : MonoBehaviour
           _mergeAnimDuration,
          onCompelete: ()=>
           {
-              ItemTextMerge(matchedList);
-              _signalBus.Fire<MergeSignal>();
 
-              // istersen burada eşleşme kontrolünü ya da ateşlemeyi tetikle
-              // StartCoroutine(_gridManager.GoalItemMatchRoutine(_goalItemsInLauncher[matchedList[1]]));
+               ItemTextMerge(matchedList);
+              _signalBus.Fire<MergeSignal>();
+              _isMerging= false;
           });
     }
     private void ItemTextMerge(List<int> matchedList)
@@ -159,7 +165,7 @@ public class LauncherManager : MonoBehaviour
         matchedList.Sort();
         int centerIndex = matchedList[1];
         GoalItem centerItem = _goalItemsInLauncher[centerIndex];
-        if (centerItem == null) return;
+        if (centerItem == null) return ;
 
         int centerID = centerItem.GetID();
         int totalCount = 0;

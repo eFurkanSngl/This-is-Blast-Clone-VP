@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 public class GridManager : MonoBehaviour
 {
@@ -16,75 +17,95 @@ public class GridManager : MonoBehaviour
     private int _gridY;
     private Tile[,] _tiles;
     private BulletManager _bulletManager;
+    private IGoalItemExitScreen _exitScreen;
 
 
     [Inject]
-    public void StructInject(GridData gridData, TilePool tilePool, LauncherManager launcherManager, BulletManager bulletManager)
+    public void StructInject(GridData gridData, TilePool tilePool, LauncherManager launcherManager, BulletManager bulletManager
+        ,IGoalItemExitScreen exitScreen)
     {
         _gridData = gridData;
         _pool = tilePool;
         _launcherManager = launcherManager;
         _bulletManager = bulletManager;
+        _exitScreen = exitScreen;
     }
 
     private IEnumerator RainDownRoutine()
     {
-        for(int x = _gridY - 2; x >= 0; x--)
+        for (int x = 0; x < _gridX; x++)
         {
-            for(int y = 0; y < _gridX; y++)
+            for (int y = 0; y < _gridY - 1; y++)
             {
-                if (_tiles[x, y] == null) continue;
-
-                int targetX = x;
-
-                while(targetX+ 1 < _gridY && _tiles[targetX + 1, y] == null)
+                if (_tiles[y, x] == null)
                 {
-                    targetX++;
-                }
+                    // yukarıdan boşluk doldurma
+                    for (int k = y + 1; k < _gridY; k++)
+                    {
+                        if (_tiles[k, x] != null)
+                        {
+                            Tile fallingTile = _tiles[k, x];
 
-                if(targetX != x)
-                {
-                    Tile fallingTile = _tiles[x, y];
-                    _tiles[targetX,y] = fallingTile;
-                    _tiles[x, y] = null;
+                            _tiles[y, x] = fallingTile;
+                            _tiles[k, x] = null;
 
-                    Vector3 targetPos = GetWorldPos(targetX, y);
-                    fallingTile.transform.DOMove(targetPos,0.3f).SetEase(Ease.InOutBack);
-                    yield return new WaitForSeconds(0.2f);
+                            fallingTile.SetGridPos(y, x);
+
+                            // hedef localPos
+                            Vector3 localTarget = new Vector3(x * _spacing, y * _spacing, 0f);
+
+                            // worldPos (rotation ile birlikte)
+                            Vector3 worldTarget = transform.TransformPoint(localTarget);
+
+                            fallingTile.transform
+                                .DOMove(worldTarget, 0.25f)
+                                .SetEase(Ease.OutQuad);
+
+                            break;
+                        }
+                    }
                 }
             }
         }
+
+        yield return new WaitForSeconds(0.2f);
     }
 
-    private Vector3 GetWorldPos(int row, int col)
+    private Vector3 GetWorldPosition(int row, int col)
     {
-        return new Vector3(
-           transform.position.x + col * _spacing,
-           transform.position.y + (_gridY - 1 - row) * _spacing,  
-           0f
-       );
+        // griddeki local başlangıç noktası
+        Vector3 origin = transform.position;
+
+        // X yönünde sütun kayması
+        Vector3 right = transform.right * (col * _spacing);
+
+        // Aşağı doğru satır kayması (GridManager’ın local down yönü)
+        Vector3 down = -transform.up * (row * _spacing);
+
+        return origin + right + down;
     }
-    private List<Transform> GetTilesBetween(Vector3 startPos, Vector3 targetPos, int row = 0)
-    {
-      List<Transform> transList = new List<Transform>();
-        if (_tiles == null) return transList;
 
-        float minX = Mathf.Min(startPos.x, targetPos.x);
-        float maxX= Mathf.Min(startPos.y, targetPos.y);
+    //private List<Transform> GetTilesBetween(Vector3 startPos, Vector3 targetPos, int row = 0)
+    //{
+    //  List<Transform> transList = new List<Transform>();
+    //    if (_tiles == null) return transList;
 
-        for(int x = 0; x < _gridX; x++)
-        {
-            Tile tile = _tiles[row, x]; 
-            if (tile == null) continue;
+    //    float minX = Mathf.Min(startPos.x, targetPos.x);
+    //    float maxX= Mathf.Min(startPos.y, targetPos.y);
 
-            if(tile.transform.position.x > minX && tile.transform.position.x < maxX)
-            {
-                transList.Add(tile.transform);
-            }
+    //    for(int x = 0; x < _gridX; x++)
+    //    {
+    //        Tile tile = _tiles[row, x]; 
+    //        if (tile == null) continue;
 
-        }
-        return transList;
-    }
+    //        if(tile.transform.position.x > minX && tile.transform.position.x < maxX)
+    //        {
+    //            transList.Add(tile.transform);
+    //        }
+
+    //    }
+    //    return transList;
+    //}
     private void RotateGoalItem(GoalItem goalItem,Vector3 targetPos)
     {
         Vector3 direction = targetPos - goalItem.transform.position;
@@ -105,7 +126,13 @@ public class GridManager : MonoBehaviour
     {
         StartCoroutine(GoalItemMatch(goalItem));
     }
-
+    private void ResetGoalItem(GoalItem goalItem)
+    {
+        goalItem.transform.DOKill();
+        goalItem.transform
+            .DORotateQuaternion(Quaternion.identity, 0.3f)
+            .SetEase(Ease.OutBack);
+    }
     private IEnumerator GoalItemMatch(GoalItem goalItem)
     {
         int targetId = goalItem.GetID();
@@ -141,52 +168,54 @@ public class GridManager : MonoBehaviour
                             {
                                 goalItem.DecreaseCount(1);
 
-                                // Top layer yok oldu, tile hala duruyor mu kontrol et
                                 if (tile.IsCompletelyDestroyed())
                                 {
-                                    _tiles[0, x] = null;
                                     _pool.ReturnTile(tileId, tile.gameObject);
-                                    StartCoroutine(RainDownRoutine());
                                 }
                             });
                         }
                         else
                         {
-                            // Base layer'a vur
                             tile.HitLayer(false, () =>
                             {
+                                goalItem.DecreaseCount(1);
 
-                                // Base layer yok oldu, tile tamamen bitti
                                 if (tile.IsCompletelyDestroyed())
                                 {
                                     _pool.ReturnTile(tileId, tile.gameObject);
                                     _tiles[0, x] = null;
-
                                     StartCoroutine(RainDownRoutine());
+
                                 }
-                                goalItem.DecreaseCount(1);
 
                             });
                         }
                     });
 
+
                     yield return new WaitForSeconds(0.2f);
+                    break;
                 }
-                break;  
             }
             if (!found)
             {
-                Debug.Log($"GoalItem {targetId} için eşleşen tile bulunamadı!");
-                yield break;
-            }
+                ResetGoalItem(goalItem);
+                yield return null;
 
-            // Her vuruş arasında kısa bir bekleme
-            //yield return new WaitForSeconds(0.1f); // Çok daha hızlı geçiş
+            }
+            if (goalItem != null && goalItem.CurrentCount == 0)
+            {
+                ResetGoalItem(goalItem);
+                yield return new WaitForSeconds(0.2f);
+                _exitScreen.PlayExit(goalItem, () =>
+                {
+                    Debug.Log("is work");
+                });
+            }
+        }
         }
 
-        if (goalItem != null)
-            Debug.Log("GoalItem tamamen bitti");
-    }
+     
 
 
 
@@ -200,42 +229,46 @@ public class GridManager : MonoBehaviour
     private void GenerateGrid()
     {
         int[,] layout = _gridData.GetGridLayOut();
-
         int[,] stacks = _gridData.GetStackCounts();
 
-        _gridY = layout.GetLength(0); 
+        _gridY = layout.GetLength(0);
         _gridX = layout.GetLength(1);
 
         _tiles = new Tile[_gridY, _gridX];
 
-            for (int i = 0; i < _gridY; i++)
+        for (int i = 0; i < _gridY; i++)
+        {
+            for (int j = 0; j < _gridX; j++)
             {
-                for (int j = 0; j < _gridX; j++)
-                {
-                    int id = layout[i, j];
-                    Vector3 pos = new Vector3(
-                     transform.position.x + j * _spacing,
-                     transform.position.y + i * _spacing,
-                     0f
-                    );
-                    GameObject newTile = _pool.GetTile(id);
-                    if (newTile == null)
-                    {
-                        Debug.Log("is not enough");
-                        continue;
-                    }
-                    newTile.transform.position = pos;
-                    newTile.transform.SetParent(transform, false);
+                int id = layout[i, j];
 
-                    Tile tile = newTile.GetComponent<Tile>();
-                    if (tile != null)
-                    {
+                // local pos (grid'e göre)
+                Vector3 localPos = new Vector3(j * _spacing, i * _spacing, 0f);
+
+                // world pos'a çevir (Grid rotation’u ile birlikte)
+                Vector3 worldPos = transform.TransformPoint(localPos);
+
+                GameObject newTile = _pool.GetTile(id);
+                if (newTile == null)
+                {
+                    Debug.Log("not enough tiles in pool");
+                    continue;
+                }
+
+                newTile.transform.position = worldPos;
+                newTile.transform.SetParent(transform, true); // worldPos koru
+
+                Tile tile = newTile.GetComponent<Tile>();
+                if (tile != null)
+                {
                     int layerHealth = Math.Clamp(stacks[i, j], 1, 2);
-                    tile.Initialize((Tile.TileColor)id,layerHealth);
-                        _tiles[i, j] = tile;
-                    }
+                    tile.SetGridPos(i, j);
+                    tile.Initialize((Tile.TileColor)id, layerHealth);
+
+                    _tiles[i, j] = tile;
                 }
             }
+        }
     }
     public Tile GetTileAtGridPos(Vector2Int gridPos)
     {

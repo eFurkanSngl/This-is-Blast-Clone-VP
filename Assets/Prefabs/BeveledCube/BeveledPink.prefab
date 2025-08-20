@@ -102,7 +102,7 @@ MonoBehaviour:
   _tileTransform: {fileID: 4340890625167883210}
   _baseLayer: {fileID: 7139315608476113181}
   _topLayer: {fileID: 3996418736910508400}
-  totalDuration: 0.4
+  totalDuration: 0.1
   easeType: 1
 --- !u!4 &4340890625167883210 stripped
 Transform:
@@ -209,7 +209,7 @@ MonoBehaviour:
   _tileTransform: {fileID: 7518795950969488295}
   _baseLayer: {fileID: 7139315608476113181}
   _topLayer: {fileID: 3996418736910508400}
-  totalDuration: 0.1
+  totalDuration: 0.05
   easeType: 1
 --- !u!4 &7518795950969488295 stripped
 Transform:

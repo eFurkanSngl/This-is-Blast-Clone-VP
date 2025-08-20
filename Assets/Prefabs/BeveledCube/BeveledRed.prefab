@@ -214,7 +214,7 @@ MonoBehaviour:
   _tileTransform: {fileID: 8732021396542230976}
   _baseLayer: {fileID: 8243152604737227642}
   _topLayer: {fileID: 2801071165730538046}
-  totalDuration: 0.1
+  totalDuration: 0.05
   easeType: 1
 --- !u!4 &8732021396542230976 stripped
 Transform:
