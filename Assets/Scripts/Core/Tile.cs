@@ -51,17 +51,18 @@ public class Tile : MonoBehaviour, ITileAnim
             return;
         }
 
-        target.DOScale(1.1f, totalDuration * 0.2f)
+        target.DOScale(1.1f, totalDuration * 0.10f)
             .SetEase(Ease.OutBack)
             .OnComplete(() =>
             {
-                target.DOScale(0f, totalDuration * 0.6f)
-                    .SetEase(easeType)
-                    .OnComplete(() =>
-                    {
-                        target.gameObject.SetActive(false);
-                        onComplete?.Invoke();
-                    });
+                Sequence seq = DOTween.Sequence();
+                seq.Append(target.DOScale(0f, totalDuration * 0.15f)
+                    .SetEase(easeType));
+                seq.OnComplete(() =>
+                {
+                    target.gameObject.SetActive(false);
+                    onComplete?.Invoke();
+                });
             });
     }
 

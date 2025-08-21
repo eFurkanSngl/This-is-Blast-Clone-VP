@@ -1,8 +1,10 @@
+﻿using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using Zenject;
 
 public class GoalItem : MonoBehaviour
 {
@@ -21,7 +23,11 @@ public class GoalItem : MonoBehaviour
     public int CurrentCount => _currentCount;
     public TextMeshPro CounText => _countText;
     public bool IsLauncher { get; set; } = false;
-    
+
+    [SerializeField] private Transform _bulletSpawnPoint;
+    [SerializeField] private Transform _splashTransform;
+    public Transform BulletSpawnPoint => _bulletSpawnPoint;
+    [SerializeField] private SplashPool _splashPool;
     private void Awake()
     {
         _renderer = GetComponent<MeshRenderer>();
@@ -31,6 +37,41 @@ public class GoalItem : MonoBehaviour
         }
         _boxCollider = GetComponent<BoxCollider>();
     }
+    private void ShootSplash()
+    {
+        if (_splashTransform != null)
+        {
+            GameObject splash = _splashPool.GetSplash();
+            splash.transform.position = _splashTransform.position;
+
+            splash.transform.DOScale(0.5f, 0.15f).SetEase(Ease.OutBack)
+                .OnComplete(() =>
+                {
+                    _splashPool.ReturnSplash(splash);
+                });
+        }
+    }
+    public void PlayShotAnim()
+    {
+        Vector3 baseScale = Vector3.one;
+
+        Vector3 squashed = new Vector3(
+            baseScale.x,
+            baseScale.y * 0.85f,
+            baseScale.z
+        );
+
+        transform.DOScale(squashed, 0.05f)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() =>
+            {
+                transform.DOScale(baseScale, 0.1f)
+                         .SetEase(Ease.OutQuad);
+            });
+        ShootSplash();
+    }
+
+
     public BoxCollider GetCollider()
     {
         return _boxCollider;

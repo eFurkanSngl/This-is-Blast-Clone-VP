@@ -82,24 +82,47 @@ public class LauncherManager : MonoBehaviour
     }
     private IEnumerator HasFireRoutine(GoalItem goalItem, int currentIndex)
     {
-        // Merge varsa bekle
-        while (_isMerging)
-            yield return null;
-
         int id = goalItem.GetID();
 
-        // Solda aynı id varsa ateş etme
-        for (int i = 0; i < currentIndex; i++)
+        while (goalItem != null && goalItem.CurrentCount > 0 && _goalItemsInLauncher[currentIndex] == goalItem)
         {
-            if (_goalItemsInLauncher[i] != null && _goalItemsInLauncher[i].GetID() == id)
-                yield break;
-        }
+            // Eğer merge varsa bekle ama döngüden çıkma
+            while (_isMerging)
+                yield return null;
 
-        // 🔥 Buraya kadar geldiyse ateş edebilir
-        _gridManager.GoalItemMatchRoutine(goalItem);
+            // GoalItem yoksa ya da sayısı bittiyse çık
+            if (goalItem == null || goalItem.CurrentCount <= 0)
+                break;
+
+            // Solda aynı ID varsa ateşi beklet
+            bool hasLeftSameId = false;
+            for (int i = 0; i < currentIndex; i++)
+            {
+                if (_goalItemsInLauncher[i] != null && _goalItemsInLauncher[i].GetID() == id)
+                {
+                    hasLeftSameId = true;
+                    break;
+                }
+            }
+
+            if (hasLeftSameId)
+            {
+                // Soldaki bitene kadar bekle, ama bu coroutine devam etsin
+                yield return new WaitForSeconds(0.1f);
+                continue;
+            }
+
+            // Ateş edilebilir duruma gelindi
+             _gridManager.GoalItemMatchRoutine(goalItem);
+
+            // Ateş ettikten sonra, tekrar merge oluyorsa bekle
+            yield return new WaitUntil(() => goalItem == null || goalItem.CurrentCount <= 0 || _isMerging);
+        }
     }
+
     private void PlaceGoalBoxAnim(GoalItem item)
     {
+
         Sequence seq = DOTween.Sequence();
         seq.Append(item.transform.DOScale(new Vector3(1.3f, 0.7f, 1f), _placeGoalDuration).SetEase(Ease.OutQuad));
         seq.Append(item.transform.DOScale(new Vector3(0.9f, 1.1f, 1f), _placeGoalDuration).SetEase(Ease.OutQuad));

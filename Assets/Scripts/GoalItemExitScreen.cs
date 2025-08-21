@@ -62,12 +62,11 @@ public class GoalItemExitScreen : IGoalItemExitScreen
         seq.Append(goalItem.transform.DOMove(exitPos, 0.3f)
             .SetEase(Ease.InOutSine));
 
-
+        _launcherManager.ClearGoalItem(index);
 
         seq.OnComplete(() =>
         {
             goalItem.gameObject.SetActive(false);
-            _launcherManager.ClearGoalItem(index);
             onComplete?.Invoke();
         });
     }

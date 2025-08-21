@@ -18,17 +18,19 @@ public class GridManager : MonoBehaviour
     private Tile[,] _tiles;
     private BulletManager _bulletManager;
     private IGoalItemExitScreen _exitScreen;
+    private SignalBus _signalBus;
 
 
     [Inject]
     public void StructInject(GridData gridData, TilePool tilePool, LauncherManager launcherManager, BulletManager bulletManager
-        ,IGoalItemExitScreen exitScreen)
+        ,IGoalItemExitScreen exitScreen, SignalBus signalBus)
     {
         _gridData = gridData;
         _pool = tilePool;
         _launcherManager = launcherManager;
         _bulletManager = bulletManager;
         _exitScreen = exitScreen;
+        _signalBus = signalBus;
     }
 
     private IEnumerator RainDownRoutine()
@@ -67,22 +69,7 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
-
-        yield return new WaitForSeconds(0.2f);
-    }
-
-    private Vector3 GetWorldPosition(int row, int col)
-    {
-        // griddeki local başlangıç noktası
-        Vector3 origin = transform.position;
-
-        // X yönünde sütun kayması
-        Vector3 right = transform.right * (col * _spacing);
-
-        // Aşağı doğru satır kayması (GridManager’ın local down yönü)
-        Vector3 down = -transform.up * (row * _spacing);
-
-        return origin + right + down;
+        yield return new WaitForSeconds(0.25f);
     }
 
     //private List<Transform> GetTilesBetween(Vector3 startPos, Vector3 targetPos, int row = 0)
@@ -118,7 +105,7 @@ public class GridManager : MonoBehaviour
         goalItem.transform.DOKill();
 
         goalItem.transform
-            .DORotateQuaternion(lookRotation, 0.3f)
+            .DORotateQuaternion(lookRotation, 0.2f)
             .SetEase(Ease.OutBack); 
     }
 
@@ -130,7 +117,7 @@ public class GridManager : MonoBehaviour
     {
         goalItem.transform.DOKill();
         goalItem.transform
-            .DORotateQuaternion(Quaternion.identity, 0.3f)
+            .DORotateQuaternion(Quaternion.identity, 0.2f)
             .SetEase(Ease.OutBack);
     }
     private IEnumerator GoalItemMatch(GoalItem goalItem)
@@ -159,7 +146,7 @@ public class GridManager : MonoBehaviour
                     // Hangi layer'a vuracağımızı belirle
                     bool shouldHitTop = tile.ShouldHitTopLayer();
 
-                    _bulletManager.FireBullet(startPos, endPos, () =>
+                    _bulletManager.FireBullet(goalItem, endPos, () =>
                     {
                         if (shouldHitTop)
                         {
@@ -167,12 +154,12 @@ public class GridManager : MonoBehaviour
                             tile.HitLayer(true, () =>
                             {
                                 goalItem.DecreaseCount(1);
-
                                 if (tile.IsCompletelyDestroyed())
                                 {
                                     _pool.ReturnTile(tileId, tile.gameObject);
                                 }
                             });
+
                         }
                         else
                         {
@@ -183,15 +170,15 @@ public class GridManager : MonoBehaviour
                                 if (tile.IsCompletelyDestroyed())
                                 {
                                     _pool.ReturnTile(tileId, tile.gameObject);
-                                    _tiles[0, x] = null;
-                                    StartCoroutine(RainDownRoutine());
-
+                                    tile.gameObject.SetActive(false);
+                                    _signalBus.Fire<DestorySignal>();
                                 }
+                                _tiles[0, x] = null;
+                                StartCoroutine(RainDownRoutine());
 
                             });
                         }
                     });
-
 
                     yield return new WaitForSeconds(0.2f);
                     break;
@@ -206,7 +193,6 @@ public class GridManager : MonoBehaviour
             if (goalItem != null && goalItem.CurrentCount == 0)
             {
                 ResetGoalItem(goalItem);
-                yield return new WaitForSeconds(0.2f);
                 _exitScreen.PlayExit(goalItem, () =>
                 {
                     Debug.Log("is work");
@@ -214,11 +200,6 @@ public class GridManager : MonoBehaviour
             }
         }
         }
-
-     
-
-
-
 
     private void Start()
     {
@@ -270,16 +251,16 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    public Tile GetTileAtGridPos(Vector2Int gridPos)
-    {
-        int row = gridPos.y;
-        int col = gridPos.x;
+    //public Tile GetTileAtGridPos(Vector2Int gridPos)
+    //{
+    //    int row = gridPos.y;
+    //    int col = gridPos.x;
 
-        if (row < 0 || row >= _gridY || col < 0 || col >= _gridX)
-            return null;
+    //    if (row < 0 || row >= _gridY || col < 0 || col >= _gridX)
+    //        return null;
 
-        return _tiles[row, col];
-    }
+    //    return _tiles[row, col];
+    //}
 
 
 }
