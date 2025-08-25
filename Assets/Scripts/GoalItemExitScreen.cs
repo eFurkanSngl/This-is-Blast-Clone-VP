@@ -8,6 +8,7 @@ public class GoalItemExitScreen : IGoalItemExitScreen
     private float _exitOffset = 20f;
     private bool _isRight = false;
     [Inject] private LauncherManager _launcherManager;
+    [Inject] private SignalBus _signalBus;
     public void PlayExit(GoalItem goalItem, Action onComplete = null)
     {
         if (goalItem == null) return;
@@ -49,20 +50,16 @@ public class GoalItemExitScreen : IGoalItemExitScreen
         Vector3 forwardPos = start + new Vector3(0, 0, 3f);
         Vector3 curvePos = (start + exitPos) * 0.5f + new Vector3(0, UnityEngine.Random.Range(0.3f, 0.9f), 0);
         Sequence seq = DOTween.Sequence();
-
         seq.Append(goalItem.transform.DOMove(forwardPos, 0.3f)
             .SetEase(Ease.OutQuad));
-
         seq.Append(goalItem.transform.DORotateQuaternion(lookRotation, 0.3f)
             .SetEase(Ease.OutBack));
-
         seq.Append(goalItem.transform.DOMove(curvePos, 0.3f)
             .SetEase(Ease.InOutSine));
-
         seq.Append(goalItem.transform.DOMove(exitPos, 0.3f)
             .SetEase(Ease.InOutSine));
-
         _launcherManager.ClearGoalItem(index);
+        _signalBus.Fire<SwipeSignalBus>();
 
         seq.OnComplete(() =>
         {

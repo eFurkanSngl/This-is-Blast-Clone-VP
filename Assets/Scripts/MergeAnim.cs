@@ -43,7 +43,7 @@ public class MergeAnim : IMergeAnim
             .OnComplete(() =>
             {
                 centerItem.transform.DOScale(Vector3.one, mergeAnimDuration).SetEase(Ease.InOutSine);
-                onComplete?.Invoke(); // ← buradan callback’i tetikliyoruz
+                onComplete?.Invoke();
             });
     }
 }

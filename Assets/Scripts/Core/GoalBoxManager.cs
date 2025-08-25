@@ -120,6 +120,7 @@ public class GoalBoxManager : MonoBehaviour
             GoalItemCache cache = clickedObj.GetComponent<GoalItemCache>();
             clickedObj.transform.SetParent(_launcherManager.GetBoxTransform(emptyIndex));
             ClickedAnim(cache, emptyIndex);
+            HapticManager.PlayHaptic(HapticManager.HapticType.Light);
             _signalBus.Fire<ClickSignalBus>();
             RemoveOutline(cache);
             cache.goalItem.EnableTrail();

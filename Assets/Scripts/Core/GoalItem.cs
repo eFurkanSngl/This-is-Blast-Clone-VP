@@ -1,10 +1,9 @@
 ﻿using DG.Tweening;
+using DG.Tweening.Core.Easing;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using Zenject;
 
 public class GoalItem : MonoBehaviour
 {
@@ -28,6 +27,8 @@ public class GoalItem : MonoBehaviour
     [SerializeField] private Transform _splashTransform;
     public Transform BulletSpawnPoint => _bulletSpawnPoint;
     [SerializeField] private SplashPool _splashPool;
+
+
     private void Awake()
     {
         _renderer = GetComponent<MeshRenderer>();
@@ -36,6 +37,7 @@ public class GoalItem : MonoBehaviour
             trailRenderer.emitting = false;
         }
         _boxCollider = GetComponent<BoxCollider>();
+    
     }
     private void ShootSplash()
     {
@@ -99,7 +101,7 @@ public class GoalItem : MonoBehaviour
 
     public int GetID() => (int)_goalItemData.tileColor;
     public Tile.TileColor GetColor() => _goalItemData.tileColor;
-    private void UpdateText()
+    public void UpdateText()
     {
         if(_countText != null)
         {

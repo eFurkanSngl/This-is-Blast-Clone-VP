@@ -264,7 +264,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  - {fileID: -9065014053978393009, guid: 92b3743b37ea01b45986c4d32ffae611, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -306,10 +306,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 10
+  m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 92b3743b37ea01b45986c4d32ffae611, type: 2}
+  m_sharedMaterial: {fileID: -9065014053978393009, guid: 92b3743b37ea01b45986c4d32ffae611, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -339,7 +339,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -649,6 +649,7 @@ MonoBehaviour:
   _bulletSpawnPoint: {fileID: 7741447104436939620}
   _splashTransform: {fileID: 4041870125292799042}
   _splashPool: {fileID: 1563293861046673386}
+  _mergeParticle: {fileID: 5809676137117755848, guid: 97b17366826b7c5418fd4ea5b1482872, type: 3}
 --- !u!114 &7942131294371949739
 MonoBehaviour:
   m_ObjectHideFlags: 0

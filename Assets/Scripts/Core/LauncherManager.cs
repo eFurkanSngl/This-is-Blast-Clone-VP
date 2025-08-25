@@ -1,14 +1,13 @@
 ﻿using DG.Tweening;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
-using static UnityEditor.Progress;
 
 public class LauncherManager : MonoBehaviour
 {
     [SerializeField] private Transform[] _launcherBox;
+    [SerializeField] private Transform _hiddenLauncherBox;
     [SerializeField] private float _placeGoalDuration = 0.08f;
     [SerializeField] private float _mergeAnimDuration = 0.1f;
     [Inject] private SignalBus _signalBus;
@@ -25,6 +24,64 @@ public class LauncherManager : MonoBehaviour
         _reservedSlot = new bool[_launcherBox.Length];
     }
 
+    public void PlayOnShot()
+    {
+        if (_hiddenLauncherBox == null) return;
+
+        GoalItem leftItem = null;
+        int leftIndex = -1;
+
+        for (int i = 0; i < _launcherBox.Length; i++)
+        {
+            if (_launcherBox[i].childCount > 0)
+            {
+                leftItem = _launcherBox[i].GetComponentInChildren<GoalItem>();
+                if (leftItem != null)
+                {
+                    leftIndex = GetGoalItemIndex(leftItem);
+                    break; 
+                }
+            }
+        }
+
+        if (leftItem == null || leftIndex < 0)
+        {
+            Debug.Log("[LauncherManager] PlayOn: GoalItem bulunamadı");
+            return;
+        }
+
+        ClearGoalItem(leftIndex);
+        SlideToHiddenAndFire(leftItem);
+        PlaceGoalBoxAnim(leftItem);
+    }
+
+    private void SlideToHiddenAndFire(GoalItem item)
+    {
+        if (item == null) return;
+
+        Transform transform = item.transform;
+        transform.DOKill();
+
+        transform.SetParent(_hiddenLauncherBox, true);
+
+        Sequence seq = DOTween.Sequence();
+        seq.Append(transform.DOMove(_hiddenLauncherBox.position, 0.22f).SetEase(Ease.OutCubic));
+        seq.Join(transform.DOPunchScale(new Vector3(0.12f, -0.12f, 0f), 0.18f, 6, 0.6f));
+
+        seq.OnComplete(() =>
+        {
+            transform.localPosition = new Vector3(0f, 0f, -0.4f);
+            transform.localScale = Vector3.one;
+
+            BoxCollider col = item.GetCollider();
+            if (col != null)
+            {
+                col.enabled = false;
+            }
+
+            StartCoroutine(FireGoalItemRoutine(item));
+        });
+    }
     public void ClearGoalItem(int index)
     {
         if(index >= 0 && index < _goalItemsInLauncher.Length)
@@ -77,47 +134,26 @@ public class LauncherManager : MonoBehaviour
         _reservedSlot[index] = false;
 
        CheckMerge();
-        StartCoroutine(HasFireRoutine(goalItem, index));
+        StartCoroutine(FireGoalItemRoutine(goalItem));
 
     }
-    private IEnumerator HasFireRoutine(GoalItem goalItem, int currentIndex)
+
+    private IEnumerator FireGoalItemRoutine(GoalItem item)
     {
-        int id = goalItem.GetID();
+        int id = item.GetID();
 
-        while (goalItem != null && goalItem.CurrentCount > 0 && _goalItemsInLauncher[currentIndex] == goalItem)
+        if (!_idFireLock.ContainsKey(id))
         {
-            // Eğer merge varsa bekle ama döngüden çıkma
-            while (_isMerging)
-                yield return null;
-
-            // GoalItem yoksa ya da sayısı bittiyse çık
-            if (goalItem == null || goalItem.CurrentCount <= 0)
-                break;
-
-            // Solda aynı ID varsa ateşi beklet
-            bool hasLeftSameId = false;
-            for (int i = 0; i < currentIndex; i++)
-            {
-                if (_goalItemsInLauncher[i] != null && _goalItemsInLauncher[i].GetID() == id)
-                {
-                    hasLeftSameId = true;
-                    break;
-                }
-            }
-
-            if (hasLeftSameId)
-            {
-                // Soldaki bitene kadar bekle, ama bu coroutine devam etsin
-                yield return new WaitForSeconds(0.1f);
-                continue;
-            }
-
-            // Ateş edilebilir duruma gelindi
-             _gridManager.GoalItemMatchRoutine(goalItem);
-
-            // Ateş ettikten sonra, tekrar merge oluyorsa bekle
-            yield return new WaitUntil(() => goalItem == null || goalItem.CurrentCount <= 0 || _isMerging);
+            _idFireLock[id] = false;
         }
+
+        while (_idFireLock[id] || _isMerging) yield return null;
+
+        _idFireLock[id] = true;
+
+        yield return StartCoroutine(_gridManager.GoalItemMatch(item));
+
+        _idFireLock[id] = false;
     }
 
     private void PlaceGoalBoxAnim(GoalItem item)
@@ -170,25 +206,53 @@ public class LauncherManager : MonoBehaviour
     private void MergeAnim(List<int> matchedList)
     {
         _isMerging = true;
-        _mergeAnim.PlayMergeAnim(
-          matchedList,
-          _goalItemsInLauncher,
-          _launcherBox,
-          _mergeAnimDuration,
-         onCompelete: ()=>
-          {
+        matchedList.Sort();
+        int centerIndex = matchedList[1];
+        GoalItem centerItem = _goalItemsInLauncher[centerIndex];
 
-               ItemTextMerge(matchedList);
-              _signalBus.Fire<MergeSignal>();
-              _isMerging= false;
-          });
+        for (int i = 0; i < matchedList.Count; i++)
+        {
+            int currentIndex = matchedList[i];
+            if (currentIndex == centerIndex)
+                continue;
+
+            GoalItem itemMerge = _goalItemsInLauncher[currentIndex];
+            if (itemMerge == null) continue;
+
+            Transform targetTrans = _launcherBox[centerIndex];
+            Transform itemTrans = itemMerge.transform;
+
+            Sequence seq = DOTween.Sequence();
+            seq.Append(itemTrans.DOMove(targetTrans.position, _mergeAnimDuration).SetEase(Ease.InOutSine));
+            seq.Join(itemTrans.DOScale(1.4f, _mergeAnimDuration));
+            seq.Append(itemTrans.DOScale(0.3f, _mergeAnimDuration));
+            seq.AppendCallback(() =>
+            {
+                itemTrans.DOKill();
+                Destroy(itemMerge.gameObject);
+                _goalItemsInLauncher[currentIndex] = null;
+            });
+        }
+        centerItem.transform.DOScale(1.5f, _mergeAnimDuration).SetEase(Ease.OutBack)
+        .OnComplete(() =>
+        {
+            ItemTextMerge(matchedList);
+            centerItem.transform.DOScale(Vector3.one, _mergeAnimDuration).SetEase(Ease.InOutSine);
+            HapticManager.PlayHaptic(HapticManager.HapticType.Heavy);
+            _signalBus.Fire<MergeSignal>();
+            _isMerging = false;
+
+        });
+
     }
+
+
     private void ItemTextMerge(List<int> matchedList)
     {
         matchedList.Sort();
         int centerIndex = matchedList[1];
         GoalItem centerItem = _goalItemsInLauncher[centerIndex];
-        if (centerItem == null) return ;
+        if (centerItem == null) return;
 
         int centerID = centerItem.GetID();
         int totalCount = 0;

@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using DG.Tweening;
-using Zenject;
 using System;
 
 public class Tile : MonoBehaviour, ITileAnim
@@ -17,7 +15,7 @@ public class Tile : MonoBehaviour, ITileAnim
     [SerializeField] private GameObject _topLayer;
     private int _layerHealth = 1;
 
-    [SerializeField] private float totalDuration = 0.05f; // Çok hızlı
+    [SerializeField] private float totalDuration = 0.03f; 
     [SerializeField] private Ease easeType = Ease.InBack;
 
     private bool _isBeingDestroyed;
@@ -26,7 +24,6 @@ public class Tile : MonoBehaviour, ITileAnim
 
     public Vector2Int GridPos { get; private set; }
 
-    // Layer kontrol methodları
     public bool HasTopLayerOnly() => _topLayer != null && _topLayer.activeSelf && !_topLayerDestroyed;
     public bool HasBaseLayerOnly() => _baseLayer != null && _baseLayer.activeSelf && !_baseLayerDestroyed;
     public bool IsCompletelyDestroyed() => _topLayerDestroyed && _baseLayerDestroyed;
@@ -51,12 +48,12 @@ public class Tile : MonoBehaviour, ITileAnim
             return;
         }
 
-        target.DOScale(1.1f, totalDuration * 0.10f)
+        target.DOScale(1.1f, totalDuration * 0.05f)
             .SetEase(Ease.OutBack)
             .OnComplete(() =>
             {
                 Sequence seq = DOTween.Sequence();
-                seq.Append(target.DOScale(0f, totalDuration * 0.15f)
+                seq.Append(target.DOScale(0f, totalDuration * 0.05f)
                     .SetEase(easeType));
                 seq.OnComplete(() =>
                 {
@@ -78,7 +75,7 @@ public class Tile : MonoBehaviour, ITileAnim
 
         if (hitTop && HasTopLayerOnly())
         {
-            _topLayerDestroyed = true; // Hemen işaretle
+            _topLayerDestroyed = true; 
             PlayDestroyAnim(_topLayer.transform, () =>
             {
                 _topLayer.SetActive(false);
@@ -88,7 +85,7 @@ public class Tile : MonoBehaviour, ITileAnim
         }
         else if (!hitTop && HasBaseLayerOnly())
         {
-            _baseLayerDestroyed = true; // Hemen işaretle
+            _baseLayerDestroyed = true;
             PlayDestroyAnim(_baseLayer.transform, () =>
             {
                 _baseLayer.SetActive(false);

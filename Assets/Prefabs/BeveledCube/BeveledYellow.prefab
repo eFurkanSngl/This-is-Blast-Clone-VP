@@ -213,7 +213,7 @@ MonoBehaviour:
   _baseLayer: {fileID: 8684146136820470}
   _topLayer: {fileID: 453846696935787214}
   totalDuration: 0.04
-  easeType: 1
+  easeType: 2
 --- !u!65 &8668693606640688822
 BoxCollider:
   m_ObjectHideFlags: 0

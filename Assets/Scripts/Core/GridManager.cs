@@ -1,11 +1,8 @@
 ﻿using DG.Tweening;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Zenject;
-using static UnityEngine.Rendering.DebugUI.Table;
 
 public class GridManager : MonoBehaviour
 {
@@ -53,14 +50,11 @@ public class GridManager : MonoBehaviour
 
                             fallingTile.SetGridPos(y, x);
 
-                            // hedef localPos
                             Vector3 localTarget = new Vector3(x * _spacing, y * _spacing, 0f);
-
-                            // worldPos (rotation ile birlikte)
                             Vector3 worldTarget = transform.TransformPoint(localTarget);
 
                             fallingTile.transform
-                                .DOMove(worldTarget, 0.25f)
+                                .DOMove(worldTarget, 0.2f)
                                 .SetEase(Ease.OutQuad);
 
                             break;
@@ -69,30 +63,9 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(0.2f);
     }
 
-    //private List<Transform> GetTilesBetween(Vector3 startPos, Vector3 targetPos, int row = 0)
-    //{
-    //  List<Transform> transList = new List<Transform>();
-    //    if (_tiles == null) return transList;
-
-    //    float minX = Mathf.Min(startPos.x, targetPos.x);
-    //    float maxX= Mathf.Min(startPos.y, targetPos.y);
-
-    //    for(int x = 0; x < _gridX; x++)
-    //    {
-    //        Tile tile = _tiles[row, x]; 
-    //        if (tile == null) continue;
-
-    //        if(tile.transform.position.x > minX && tile.transform.position.x < maxX)
-    //        {
-    //            transList.Add(tile.transform);
-    //        }
-
-    //    }
-    //    return transList;
-    //}
     private void RotateGoalItem(GoalItem goalItem,Vector3 targetPos)
     {
         Vector3 direction = targetPos - goalItem.transform.position;
@@ -120,7 +93,7 @@ public class GridManager : MonoBehaviour
             .DORotateQuaternion(Quaternion.identity, 0.2f)
             .SetEase(Ease.OutBack);
     }
-    private IEnumerator GoalItemMatch(GoalItem goalItem)
+    public IEnumerator GoalItemMatch(GoalItem goalItem)
     {
         int targetId = goalItem.GetID();
 
@@ -171,6 +144,7 @@ public class GridManager : MonoBehaviour
                                 {
                                     _pool.ReturnTile(tileId, tile.gameObject);
                                     tile.gameObject.SetActive(false);
+                                    HapticManager.PlayHaptic(HapticManager.HapticType.Medium);
                                     _signalBus.Fire<DestorySignal>();
                                 }
                                 _tiles[0, x] = null;
@@ -182,8 +156,10 @@ public class GridManager : MonoBehaviour
 
                     yield return new WaitForSeconds(0.2f);
                     break;
+
                 }
             }
+
             if (!found)
             {
                 ResetGoalItem(goalItem);
@@ -223,10 +199,8 @@ public class GridManager : MonoBehaviour
             {
                 int id = layout[i, j];
 
-                // local pos (grid'e göre)
                 Vector3 localPos = new Vector3(j * _spacing, i * _spacing, 0f);
 
-                // world pos'a çevir (Grid rotation’u ile birlikte)
                 Vector3 worldPos = transform.TransformPoint(localPos);
 
                 GameObject newTile = _pool.GetTile(id);
@@ -237,7 +211,7 @@ public class GridManager : MonoBehaviour
                 }
 
                 newTile.transform.position = worldPos;
-                newTile.transform.SetParent(transform, true); // worldPos koru
+                newTile.transform.SetParent(transform, true); 
 
                 Tile tile = newTile.GetComponent<Tile>();
                 if (tile != null)
@@ -251,16 +225,5 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    //public Tile GetTileAtGridPos(Vector2Int gridPos)
-    //{
-    //    int row = gridPos.y;
-    //    int col = gridPos.x;
-
-    //    if (row < 0 || row >= _gridY || col < 0 || col >= _gridX)
-    //        return null;
-
-    //    return _tiles[row, col];
-    //}
-
 
 }
